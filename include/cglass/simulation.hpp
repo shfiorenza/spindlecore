@@ -5,9 +5,10 @@
 #include "interaction_manager.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
+#include "triangle_mesh.hpp"
 
 class Simulation {
- private:
+private:
   UNIT_TEST
   int i_step_ = 0;
   int log_interval_ = 10;
@@ -29,6 +30,7 @@ class Simulation {
   Graphics graphics_;
 #endif
   Space space_;
+  TriMesh membrane_;
   std::vector<SpeciesBase *> species_;
   void InitSimulation();
   void InitObjects();
@@ -56,10 +58,10 @@ class Simulation {
   void InitGraphics();
   void InitProcessing(run_options run_opts);
 
- public:
+public:
   Simulation() {}
   void Run(YAML::Node sim_params);
   void ProcessOutputs(YAML::Node sim_params, run_options run_opts);
 };
 
-#endif  // _CGLASS_SIMULATION_H_
+#endif // _CGLASS_SIMULATION_H_

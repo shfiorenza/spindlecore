@@ -20,7 +20,8 @@ void Space::Init(system_parameters *params) {
   compressibility_ = params_->compressibility;
   pressure_time_ = params_->pressure_time;
   // Make sure that n_periodic <= n_dim
-  if (n_periodic_ > n_dim_) n_periodic_ = params_->n_periodic = n_dim_;
+  if (n_periodic_ > n_dim_)
+    n_periodic_ = params_->n_periodic = n_dim_;
   radius_ = params_->system_radius;
   if (radius_ <= 0) {
     Logger::Error("System radius is not a positive number!");
@@ -36,46 +37,49 @@ void Space::Init(system_parameters *params) {
 
   // Make sure space_type is recognized
   switch (params_->boundary) {
-    case 0:
-      boundary_ = boundary_type::none;
-      break;
-    case 1:
-      boundary_ = boundary_type::box;
-      break;
-    case 2:
-      boundary_ = boundary_type::sphere;
-      break;
-    case 3:
-      // No periodicity allowed in budding yeast boundary type
-      n_periodic_ = params_->n_periodic = 0;
-      // Get bud parameters
-      bud_radius_ = params_->bud_radius;
-      bud_height_ = params_->bud_height;
-      if (bud_radius_ > radius_) {
-        Logger::Error("Bud radius larger than parent cell radius!");
-      }
-      if (bud_radius_ <= 0 || bud_height_ <= 0) {
-        Logger::Error(
-            "Budding yeast boundary type selected but either bud radius\n\
+  case 0:
+    boundary_ = boundary_type::none;
+    break;
+  case 1:
+    boundary_ = boundary_type::box;
+    break;
+  case 2:
+    boundary_ = boundary_type::sphere;
+    break;
+  case 3:
+    // No periodicity allowed in budding yeast boundary type
+    n_periodic_ = params_->n_periodic = 0;
+    // Get bud parameters
+    bud_radius_ = params_->bud_radius;
+    bud_height_ = params_->bud_height;
+    if (bud_radius_ > radius_) {
+      Logger::Error("Bud radius larger than parent cell radius!");
+    }
+    if (bud_radius_ <= 0 || bud_height_ <= 0) {
+      Logger::Error(
+          "Budding yeast boundary type selected but either bud radius\n\
             or bud height is not a positive number!");
-      }
-      if (bud_height_ >= bud_radius_ + radius_) {
-        Logger::Error(
-            "Budding cell is not attached to mother cell.\
+    }
+    if (bud_height_ >= bud_radius_ + radius_) {
+      Logger::Error("Budding cell is not attached to mother cell.\
             Check bud height or boundary type!\n");
-      }
-      if (bud_height_ <= radius_ - bud_radius_) {
-        Logger::Error(
-            "Budding cell is enclosed by mother cell.\
+    }
+    if (bud_height_ <= radius_ - bud_radius_) {
+      Logger::Error("Budding cell is enclosed by mother cell.\
             Check bud height or boundary type!\n");
-      }
-      boundary_ = boundary_type::budding;
-      break;
-    case 4:
-      boundary_ = boundary_type::wall;
-      break;
-    default:
-      Logger::Error("Boundary type %d not recognized!", params_->boundary);
+    }
+    boundary_ = boundary_type::budding;
+    break;
+  case 4:
+    boundary_ = boundary_type::wall;
+    break;
+  case 5:
+    boundary_ = boundary_type::mesh;
+    params->mesh_membrane = true;
+    printf("initializing mesh boundary\n");
+    break;
+  default:
+    Logger::Error("Boundary type %d not recognized!", params_->boundary);
   }
   InitUnitCell();
   CalculateVolume();
@@ -117,8 +121,10 @@ void Space::CalculateUnitCellQuantities() {
   }
   unit_cell_volume_ = determinant;
   /* Compute inverse unit cell matrix. */
-  if (n_dim_ == 2) invert_sym_2d_matrix(unit_cell_, unit_cell_inv_);
-  if (n_dim_ == 3) invert_sym_3d_matrix(unit_cell_, unit_cell_inv_);
+  if (n_dim_ == 2)
+    invert_sym_2d_matrix(unit_cell_, unit_cell_inv_);
+  if (n_dim_ == 3)
+    invert_sym_3d_matrix(unit_cell_, unit_cell_inv_);
   /* Compute unit cell volume, which is determinant of uc matrix */
 
   /* Set up direct and reciprocal lattice vectors. */
@@ -131,7 +137,8 @@ void Space::CalculateUnitCellQuantities() {
   /* Compute perpendicular distances between opposite unit cell faces. */
   for (int i = 0; i < n_dim_; ++i) {
     double b_mag2 = 0.0;
-    for (int j = 0; j < n_dim_; ++j) b_mag2 += SQR(b_[n_dim_ * i + j]);
+    for (int j = 0; j < n_dim_; ++j)
+      b_mag2 += SQR(b_[n_dim_ * i + j]);
     double b_mag = sqrt(b_mag2);
     a_perp_[i] = 1.0 / b_mag;
   }
@@ -139,7 +146,8 @@ void Space::CalculateUnitCellQuantities() {
 
 void Space::UpdateSpace() {
   // No space update for budding yeast yet
-  if (boundary_ == +boundary_type::budding) return;
+  if (boundary_ == +boundary_type::budding)
+    return;
   UpdateUnitCell();
   UpdateVolume();
   UpdateSpaceStruct();
@@ -152,7 +160,8 @@ void Space::ConstantPressure() {
   pressure_ = s_struct.pressure;
   // If target pressure is zero, let first pressure calculation set target
   // pressure
-  if (target_pressure_ == 0) target_pressure_ = pressure_;
+  if (target_pressure_ == 0)
+    target_pressure_ = pressure_;
   // If target pressure is vastly different from current pressure, update
   // scaling matrix
   if (ABS(pressure_ - target_pressure_) > 1e-4)
@@ -165,7 +174,8 @@ void Space::ConstantPressure() {
 
 void Space::ConstantVolume() {
   // If target radius is <= zero, disable change of system
-  if (target_radius_ <= 0) target_radius_ = radius_;
+  if (target_radius_ <= 0)
+    target_radius_ = radius_;
   // If target pressure is vastly different from current pressure, update
   // scaling matrix
   if (ABS(target_radius_ - radius_) > 2 * delta_) {
@@ -192,8 +202,8 @@ void Space::UpdateUnitCell() {
    (doesn't work for unit cells with non-zero off-diagonal elements) */
 void Space::CalculateScalingMatrix() {
   double time_const = compressibility_ * delta_ / (n_dim_ * pressure_time_);
-  std::copy(s_struct.pressure_tensor, s_struct.pressure_tensor + n_dim_*n_dim_,
-            pressure_tensor_);
+  std::copy(s_struct.pressure_tensor,
+            s_struct.pressure_tensor + n_dim_ * n_dim_, pressure_tensor_);
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
       if (i == j) {
@@ -206,119 +216,128 @@ void Space::CalculateScalingMatrix() {
               1.0 -
               time_const * (0.5 * unit_cell_[n_dim_ * i + j] - target_radius_);
       } else
-        mu_[n_dim_ * i + j] = 0.0;  // no non-ortho scaling
+        mu_[n_dim_ * i + j] = 0.0; // no non-ortho scaling
     }
   }
 }
 
 void Space::CalculateRadius() {
   switch (boundary_._to_integral()) {
-    case 1:
-      if (n_dim_ == 3)
-        radius_ = 0.5 * pow(volume_, 1.0 / 3.0);
-      else if (n_dim_ == 2)
-        radius_ = 0.5 * sqrt(volume_);
-      break;
-    case 2:
-      if (n_dim_ == 3)
-        radius_ = pow(3.0 * volume_ / (4.0 * M_PI), 1.0 / 3.0);
-      else if (n_dim_ == 2)
-        radius_ = sqrt(volume_ / M_PI);
-      break;
-    default:
-      break;
+  case 1:
+    if (n_dim_ == 3)
+      radius_ = 0.5 * pow(volume_, 1.0 / 3.0);
+    else if (n_dim_ == 2)
+      radius_ = 0.5 * sqrt(volume_);
+    break;
+  case 2:
+    if (n_dim_ == 3)
+      radius_ = pow(3.0 * volume_ / (4.0 * M_PI), 1.0 / 3.0);
+    else if (n_dim_ == 2)
+      radius_ = sqrt(volume_ / M_PI);
+    break;
+  default:
+    break;
   }
 }
 
 void Space::UpdateVolume() {
   switch (boundary_._to_integral()) {
-    case 1:
-      volume_ = unit_cell_volume_;
-      CalculateRadius();
-      break;
-    case 2:
-      Logger::Error(
-          "Updating volume for spherical boundary types not implemented.");
-      break;
-    case 3:
-      Logger::Error(
-          "Updating volume for budding yeast boundary types not implemented.");
-      break;
-    default:
-      break;
+  case 1:
+    volume_ = unit_cell_volume_;
+    CalculateRadius();
+    break;
+  case 2:
+    Logger::Error(
+        "Updating volume for spherical boundary types not implemented.");
+    break;
+  case 3:
+    Logger::Error(
+        "Updating volume for budding yeast boundary types not implemented.");
+    break;
+  default:
+    break;
   }
 }
 
 void Space::CalculateVolume() {
   switch (boundary_._to_integral()) {
-    case 0:
-      v_ratio_ = 0;
-      neck_height_ = 0;
-      neck_radius_ = 0;
-      // FIXME This is not correct for cell lists with periodic boundary. Should
-      // not hurt calculations though, just not efficient.
-      if (n_dim_ == 2)
-        volume_ = SQR(2 * radius_);
-      else
-        volume_ = CUBE(2 * radius_);
-      break;
-    case 1:
-      v_ratio_ = 0;
-      neck_height_ = 0;
-      neck_radius_ = 0;
-      // FIXME This is not correct for cell lists with periodic boundary. Should
-      // not hurt calculations though, just not efficient.
-      if (n_dim_ == 2)
-        volume_ = SQR(2 * radius_);
-      else
-        volume_ = CUBE(2 * radius_);
-      break;
-    case 2:
-      v_ratio_ = 0;
-      neck_height_ = 0;
-      neck_radius_ = 0;
-      if (n_dim_ == 2)
-        volume_ = M_PI * SQR(radius_);
-      else
-        volume_ = 4.0 / 3.0 * M_PI * CUBE(radius_);
-      break;
-    case 3: {
-      double R = radius_;
-      double r = bud_radius_;
-      double d = bud_height_;
-      if (n_dim_ == 2) {
-        volume_ =
-            M_PI * SQR(R) + M_PI * SQR(r) -
-            SQR(r) * acos((SQR(d) + SQR(r) - SQR(R)) / (2 * d * r)) -
-            SQR(R) * acos((SQR(d) + SQR(R) - SQR(r)) / (2 * d * R)) +
-            0.5 * sqrt((R + r - d) * (r + d - R) * (R + d - r) * (R + r + d));
-        v_ratio_ = SQR(r) / (SQR(r) + SQR(R));
-      } else {
-        volume_ = 4.0 / 3.0 * M_PI * CUBE(R) + 4.0 / 3.0 * M_PI * CUBE(r) -
-                  M_PI * SQR(R + r - d) *
-                      (SQR(d) + 2 * d * r - 3 * SQR(r) + 2 * d * R + 6 * r * R -
-                       3 * SQR(R)) /
-                      (12 * d);
-        v_ratio_ = CUBE(r) / (CUBE(R) + CUBE(r));
-      }
-      neck_height_ = (SQR(R) + SQR(d) - SQR(r)) / (2 * d);
-      neck_radius_ =
-          R * sqrt(1 - SQR((SQR(R) + SQR(d) - SQR(r)) / (2 * d * R)));
-      break;
+  case 0:
+    v_ratio_ = 0;
+    neck_height_ = 0;
+    neck_radius_ = 0;
+    // FIXME This is not correct for cell lists with periodic boundary. Should
+    // not hurt calculations though, just not efficient.
+    if (n_dim_ == 2)
+      volume_ = SQR(2 * radius_);
+    else
+      volume_ = CUBE(2 * radius_);
+    break;
+  case 1:
+    v_ratio_ = 0;
+    neck_height_ = 0;
+    neck_radius_ = 0;
+    // FIXME This is not correct for cell lists with periodic boundary. Should
+    // not hurt calculations though, just not efficient.
+    if (n_dim_ == 2)
+      volume_ = SQR(2 * radius_);
+    else
+      volume_ = CUBE(2 * radius_);
+    break;
+  case 2:
+    v_ratio_ = 0;
+    neck_height_ = 0;
+    neck_radius_ = 0;
+    if (n_dim_ == 2)
+      volume_ = M_PI * SQR(radius_);
+    else
+      volume_ = 4.0 / 3.0 * M_PI * CUBE(radius_);
+    break;
+  case 3: {
+    double R = radius_;
+    double r = bud_radius_;
+    double d = bud_height_;
+    if (n_dim_ == 2) {
+      volume_ =
+          M_PI * SQR(R) + M_PI * SQR(r) -
+          SQR(r) * acos((SQR(d) + SQR(r) - SQR(R)) / (2 * d * r)) -
+          SQR(R) * acos((SQR(d) + SQR(R) - SQR(r)) / (2 * d * R)) +
+          0.5 * sqrt((R + r - d) * (r + d - R) * (R + d - r) * (R + r + d));
+      v_ratio_ = SQR(r) / (SQR(r) + SQR(R));
+    } else {
+      volume_ = 4.0 / 3.0 * M_PI * CUBE(R) + 4.0 / 3.0 * M_PI * CUBE(r) -
+                M_PI * SQR(R + r - d) *
+                    (SQR(d) + 2 * d * r - 3 * SQR(r) + 2 * d * R + 6 * r * R -
+                     3 * SQR(R)) /
+                    (12 * d);
+      v_ratio_ = CUBE(r) / (CUBE(R) + CUBE(r));
     }
-    case 4:
-      v_ratio_ = 0;
-      neck_height_ = 0;
-      neck_radius_ = 0;
-      // FIXME This is not correct for cell lists with periodic boundary. Should
-      // not hurt calculations though, just not efficient.
-      if (n_dim_ == 2)
-        volume_ = SQR(2 * radius_);
-      else
-        volume_ = CUBE(2 * radius_);
-      break;
-    default:
-      break;
+    neck_height_ = (SQR(R) + SQR(d) - SQR(r)) / (2 * d);
+    neck_radius_ = R * sqrt(1 - SQR((SQR(R) + SQR(d) - SQR(r)) / (2 * d * R)));
+    break;
+  }
+  case 4:
+    v_ratio_ = 0;
+    neck_height_ = 0;
+    neck_radius_ = 0;
+    // FIXME This is not correct for cell lists with periodic boundary. Should
+    // not hurt calculations though, just not efficient.
+    if (n_dim_ == 2)
+      volume_ = SQR(2 * radius_);
+    else
+      volume_ = CUBE(2 * radius_);
+    break;
+  case 5:
+    v_ratio_ = 0;
+    neck_height_ = 0;
+    neck_radius_ = 0;
+    if (n_dim_ == 2) {
+      printf("2d mesh not implemented yet!!\n");
+      exit(1);
+    } else
+      volume_ = 4.0 / 3.0 * M_PI * CUBE(radius_);
+    break;
+  default:
+    break;
   }
 }
 
@@ -342,7 +361,7 @@ void Space::InitSpaceStruct() {
   s_struct.a_perp = a_perp_;
   s_struct.mu = mu_;
   s_struct.pressure = 0;
-  std::fill(s_struct.pressure_tensor, s_struct.pressure_tensor+9, 0.0);
+  std::fill(s_struct.pressure_tensor, s_struct.pressure_tensor + 9, 0.0);
   UpdateSpaceStruct();
 }
 

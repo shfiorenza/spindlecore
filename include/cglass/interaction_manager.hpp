@@ -4,6 +4,7 @@
 //#include "cell_list.hpp"
 #include "auxiliary.hpp"
 #include "cell_list.hpp"
+#include "centrosome_species.hpp"
 #include "crosslink_manager.hpp"
 #include "minimum_distance.hpp"
 #include "potential_manager.hpp"
@@ -13,7 +14,7 @@
 typedef std::vector<Interaction>::iterator ix_iterator;
 
 class InteractionManager {
- private:
+private:
   double stress_[9];
   double dr_update_;
   bool overlap_;
@@ -45,6 +46,7 @@ class InteractionManager {
   CellList clist_;
   PotentialManager potentials_;
   CrosslinkManager xlink_;
+  CentrosomeSpecies *spbs_{nullptr};
 
   const bool CheckSpeciesInteractorUpdate() const;
   void CheckUpdateXlinks();
@@ -69,7 +71,7 @@ class InteractionManager {
   void ApplyInteractions();
   void CalculateInteractions();
 
- public:
+public:
   InteractionManager() {}
   void Init(system_parameters *params, std::vector<SpeciesBase *> *species,
             space_struct *space, bool processing = false);
@@ -98,6 +100,12 @@ class InteractionManager {
                                      std::string checkpoint_run_name);
   void InsertCrosslinks();
   void SetInteractionAnalysis(bool set) { run_interaction_analysis_ = set; }
+
+  // void InsertAttachedCrosslinks(std::vector<std::vector<Object *>> receptor_list);
+  CrosslinkSpecies *GetSPBCrosslinks(std::string name) {
+    return xlink_.GetSPBCrosslinkSpecies(name);
+  }
+  void SetSPBs(CentrosomeSpecies *ptr) { spbs_ = ptr; }
 };
 
 #endif

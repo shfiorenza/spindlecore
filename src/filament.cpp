@@ -228,10 +228,21 @@ void Filament::InsertFirstBond() {
     }
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
-  } else {
-    // Assume custom arrangement for now
+  } else if (sparams_->insertion_type.compare("spb_anchored") == 0) {
+    // SF TODO: ensure this only occurs for spb_anchored insert type
+    for (int i_dim{0}; i_dim < params_->n_dim; i_dim++) {
+      position_[i_dim] = -length_ / 2.0 * orientation_[i_dim];
+    }
+    printf("pos: <%g, %g, %g> \n", position_[0], position_[1], position_[2]);
+    printf("u: <%g, %g, %g> \n", orientation_[0], orientation_[1],
+           orientation_[2]);
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
+  } else {
+    // Assume custom arrangement for now
+    // InitSiteAt(position_, diameter_);
+    // AddBondToTip(orientation_, bond_length_);
+    Logger::Error("Filament insertion type not recognized!");
   }
 }
 
@@ -1244,7 +1255,7 @@ void Filament::CheckFlocking() {
 
 void Filament::Draw(std::vector<graph_struct *> &graph_array) {
   if (sparams_->curvature_cluster_analysis && cluster_ > 0) {
-    double color = sparams_->color + cluster_*0.1*M_PI*M_PI;
+    double color = sparams_->color + cluster_ * 0.1 * M_PI * M_PI;
     for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
       bond->SetColor(color, draw_type::fixed);
     }

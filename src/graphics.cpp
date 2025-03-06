@@ -1,12 +1,12 @@
 #ifndef NOGRAPH
 
 #include "cglass/graphics.hpp"
-#include <stdarg.h>
+#include "cglass/macros.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "cglass/macros.hpp"
+#include <stdarg.h>
 
 static void key_callback2d(GLFWwindow *window, int key, int scancode,
                            int action, int mods) {
@@ -17,56 +17,59 @@ static void key_callback2d(GLFWwindow *window, int key, int scancode,
 
   if (action == GLFW_PRESS) {
     switch (key) {
-      case GLFW_KEY_ESCAPE:
-        graphics->keep_going_ = 1;
-        break;
-      case GLFW_KEY_UP:
-        graphics->yTrans_ += 0.5;
-        break;
-      case GLFW_KEY_DOWN:
-        graphics->yTrans_ -= 0.5;
-        break;
-      case GLFW_KEY_RIGHT:
-        graphics->xTrans_ += 0.5;
-        break;
-      case GLFW_KEY_LEFT:
-        graphics->xTrans_ -= 0.5;
-        break;
-      case GLFW_KEY_Z:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->zAngle_ += 5.0;
-        else
-          graphics->zAngle_ -= 5.0;
-        break;
-      case GLFW_KEY_SPACE:
-        graphics->xyzScale_ += 1.0 / 10.0;
-        break;
-      case GLFW_KEY_BACKSPACE:
-        graphics->xyzScale_ -= 1.0 / 10.0;
-        break;
-      case GLFW_KEY_C:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->color_switch_ = (graphics->color_switch_ + 1) % 3;
-        else {
-          graphics->color_switch_ = (graphics->color_switch_ - 1);
-          if (graphics->color_switch_ < 0) graphics->color_switch_ = 2;
-        }
-        break;
-      case GLFW_KEY_A:
-        if (mods & GLFW_MOD_SHIFT) {
-          graphics->alpha_ += 0.1;
-          if (graphics->alpha_ > 1.0) graphics->alpha_ = 1.0;
-        } else {
-          graphics->alpha_ -= 0.1;
-          if (graphics->alpha_ < 0.0) graphics->alpha_ = 0.0;
-        }
-        break;
-      case GLFW_KEY_T:
-        // graphics->draw_trajectory_flag_ =
-        //   (graphics->draw_trajectory_flag_ + 1) % 2;
-        break;
-      default:
-        break;
+    case GLFW_KEY_ESCAPE:
+      graphics->keep_going_ = 1;
+      break;
+    case GLFW_KEY_UP:
+      graphics->yTrans_ += 0.5;
+      break;
+    case GLFW_KEY_DOWN:
+      graphics->yTrans_ -= 0.5;
+      break;
+    case GLFW_KEY_RIGHT:
+      graphics->xTrans_ += 0.5;
+      break;
+    case GLFW_KEY_LEFT:
+      graphics->xTrans_ -= 0.5;
+      break;
+    case GLFW_KEY_Z:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->zAngle_ += 5.0;
+      else
+        graphics->zAngle_ -= 5.0;
+      break;
+    case GLFW_KEY_SPACE:
+      graphics->xyzScale_ += 1.0 / 10.0;
+      break;
+    case GLFW_KEY_BACKSPACE:
+      graphics->xyzScale_ -= 1.0 / 10.0;
+      break;
+    case GLFW_KEY_C:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->color_switch_ = (graphics->color_switch_ + 1) % 3;
+      else {
+        graphics->color_switch_ = (graphics->color_switch_ - 1);
+        if (graphics->color_switch_ < 0)
+          graphics->color_switch_ = 2;
+      }
+      break;
+    case GLFW_KEY_A:
+      if (mods & GLFW_MOD_SHIFT) {
+        graphics->alpha_ += 0.1;
+        if (graphics->alpha_ > 1.0)
+          graphics->alpha_ = 1.0;
+      } else {
+        graphics->alpha_ -= 0.1;
+        if (graphics->alpha_ < 0.0)
+          graphics->alpha_ = 0.0;
+      }
+      break;
+    case GLFW_KEY_T:
+      // graphics->draw_trajectory_flag_ =
+      //   (graphics->draw_trajectory_flag_ + 1) % 2;
+      break;
+    default:
+      break;
     }
   }
 }
@@ -80,68 +83,68 @@ static void key_callback3d(GLFWwindow *window, int key, int scancode,
 
   if (action == GLFW_PRESS) {
     switch (key) {
-      case GLFW_KEY_ESCAPE:
-        graphics->keep_going_ = 1;
-        break;
-      case GLFW_KEY_UP:
-        graphics->xAngle_ += 5.0;
-        break;
-      case GLFW_KEY_DOWN:
-        graphics->xAngle_ -= 5.0;
-        break;
-      case GLFW_KEY_RIGHT:
-        graphics->yAngle_ += 5.0;
-        break;
-      case GLFW_KEY_LEFT:
-        graphics->yAngle_ -= 5.0;
-        break;
-      case GLFW_KEY_Z:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->zAngle_ -= 5.0;
-        else
-          graphics->zAngle_ += 5.0;
-        break;
-      case GLFW_KEY_C:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->cNear_ -= 0.5;
-        else
-          graphics->cNear_ += 0.5;
-        break;
-      case GLFW_KEY_V:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->cFar_ += 0.5;
-        else
-          graphics->cFar_ -= 0.5;
-        break;
-      case GLFW_KEY_J:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->cxAngle_ -= 5.0;
-        else
-          graphics->cxAngle_ += 5.0;
-        break;
-      case GLFW_KEY_K:
-        if (mods & GLFW_MOD_SHIFT)
-          graphics->cyAngle_ -= 5.0;
-        else
-          graphics->cyAngle_ += 5.0;
-        break;
-      case GLFW_KEY_SPACE:
-        graphics->xyzScale_ += 1.0 / 10.0;
-        break;
-      case GLFW_KEY_BACKSPACE:
-        graphics->xyzScale_ -= 1.0 / 10.0;
-        break;
-      case GLFW_KEY_M:
-        graphics->color_switch_ = (graphics->color_switch_ + 1) % 3;
-        break;
-      case GLFW_KEY_R:
-        graphics->xyzScale_ *= 0.5;
-        break;
-      case GLFW_KEY_T:
-        graphics->xyzScale_ *= 2.0;
-        break;
-      default:
-        break;
+    case GLFW_KEY_ESCAPE:
+      graphics->keep_going_ = 1;
+      break;
+    case GLFW_KEY_UP:
+      graphics->xAngle_ += 5.0;
+      break;
+    case GLFW_KEY_DOWN:
+      graphics->xAngle_ -= 5.0;
+      break;
+    case GLFW_KEY_RIGHT:
+      graphics->yAngle_ += 5.0;
+      break;
+    case GLFW_KEY_LEFT:
+      graphics->yAngle_ -= 5.0;
+      break;
+    case GLFW_KEY_Z:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->zAngle_ -= 5.0;
+      else
+        graphics->zAngle_ += 5.0;
+      break;
+    case GLFW_KEY_C:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->cNear_ -= 0.5;
+      else
+        graphics->cNear_ += 0.5;
+      break;
+    case GLFW_KEY_V:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->cFar_ += 0.5;
+      else
+        graphics->cFar_ -= 0.5;
+      break;
+    case GLFW_KEY_J:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->cxAngle_ -= 5.0;
+      else
+        graphics->cxAngle_ += 5.0;
+      break;
+    case GLFW_KEY_K:
+      if (mods & GLFW_MOD_SHIFT)
+        graphics->cyAngle_ -= 5.0;
+      else
+        graphics->cyAngle_ += 5.0;
+      break;
+    case GLFW_KEY_SPACE:
+      graphics->xyzScale_ += 1.0 / 10.0;
+      break;
+    case GLFW_KEY_BACKSPACE:
+      graphics->xyzScale_ -= 1.0 / 10.0;
+      break;
+    case GLFW_KEY_M:
+      graphics->color_switch_ = (graphics->color_switch_ + 1) % 3;
+      break;
+    case GLFW_KEY_R:
+      graphics->xyzScale_ *= 0.5;
+      break;
+    case GLFW_KEY_T:
+      graphics->xyzScale_ *= 2.0;
+      break;
+    default:
+      break;
     }
   }
 }
@@ -153,10 +156,10 @@ void Graphics::KeyInteraction() {
   // controls
   // No key interactions if we're doing auto_graph
   //if (!auto_graph_) {
-    if (n_dim_ == 2)
-      glfwSetKeyCallback(window_, key_callback2d);
-    else if (n_dim_ == 3)
-      glfwSetKeyCallback(window_, key_callback3d);
+  if (n_dim_ == 2)
+    glfwSetKeyCallback(window_, key_callback2d);
+  else if (n_dim_ == 3)
+    glfwSetKeyCallback(window_, key_callback3d);
   //}
   // Check window for key presses/mouse interaction
   glfwPollEvents();
@@ -226,9 +229,9 @@ void Graphics::InitWindow() {
 void Graphics::Init2dWindow() {
   // Defaults for window view and coloring
   xyzScale_ = 0.95;
-  xTrans_ = yTrans_ = 0.0;  // x,y translation
-  color_switch_ = 1;        // Default 'nice' spherocylinder coloring
-  alpha_ = 1.0;             // transparency
+  xTrans_ = yTrans_ = 0.0; // x,y translation
+  color_switch_ = 1;       // Default 'nice' spherocylinder coloring
+  alpha_ = 1.0;            // transparency
 
   /* Compute size of the window respecting the aspect ratio. */
   if (unit_cell_[0] > unit_cell_[3]) {
@@ -239,9 +242,10 @@ void Graphics::Init2dWindow() {
     windx_ = (int)(windy_ * unit_cell_[0] / unit_cell_[3]);
   }
 
-  {  // Make dummy window so we can get GL extensions
+  { // Make dummy window so we can get GL extensions
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    if (!glfwInit()) Logger::Error("Unable to initialize GLFW toolkit\n");
+    if (!glfwInit())
+      Logger::Error("Unable to initialize GLFW toolkit\n");
 
     window_ = glfwCreateWindow(windx_, windy_, "2D Sphero", NULL, NULL);
 
@@ -266,8 +270,8 @@ void Graphics::Init2dWindow() {
   }
 
   glfwMakeContextCurrent(window_);
-  glfwSwapInterval(0);  // swap buffers immediately
-  glewInit();           // re-initialize glew for current window context
+  glfwSwapInterval(0); // swap buffers immediately
+  glewInit();          // re-initialize glew for current window context
 
   // Blending and antialiasing. Makes things pretty.
   glEnable(GL_LINE_SMOOTH);
@@ -295,7 +299,7 @@ void Graphics::Init2dWindow() {
       (GLdouble)(ymin - 0.05 * unit_cell_[3]),
       (GLdouble)(ymax +
                  0.05 *
-                     unit_cell_[3]));  // deprecated, but annoying to implement
+                     unit_cell_[3])); // deprecated, but annoying to implement
   /* JMM attempting to fix Mac resize issues */
   glfwGetFramebufferSize(window_, &windx_, &windy_);
   /* establish initial viewport */
@@ -306,8 +310,8 @@ void Graphics::Init3dWindow() {
   xAngle_ = 90;
   yAngle_ = 0;
   zAngle_ = 90;
-  xyzScale_ = 0.95;  // zoom out just a hair.
-  zTrans_ = -24;     // camera position in z
+  xyzScale_ = 0.95; // zoom out just a hair.
+  zTrans_ = -24;    // camera position in z
   color_switch_ = 1;
 
   // FIXME: Assumes a square box. Better way to calculate this, but we
@@ -316,15 +320,16 @@ void Graphics::Init3dWindow() {
   for (int i = 0; i < 3; ++i)
     a_perp_max = MAX(unit_cell_[3 * i + i], a_perp_max);
 
-  cNear_ = -2.0 * a_perp_max;  // clipping plane near
-  cFar_ = 2.0 * a_perp_max;    // clipping plane far
-  cxAngle_ = cyAngle_ = 0;     // plane angles
+  cNear_ = -2.0 * a_perp_max; // clipping plane near
+  cFar_ = 2.0 * a_perp_max;   // clipping plane far
+  cxAngle_ = cyAngle_ = 0;    // plane angles
 
-  windx_ = windy_ = 400;  // window size in pixels
+  windx_ = windy_ = 1000; // window size in pixels
 
-  {  // Make dummy window so we can get GL extensions
+  { // Make dummy window so we can get GL extensions
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    if (!glfwInit()) Logger::Error("Unable to initialize GLFW toolkit\n");
+    if (!glfwInit())
+      Logger::Error("Unable to initialize GLFW toolkit\n");
 
     window_ = glfwCreateWindow(windx_, windy_, "2D Sphero", NULL, NULL);
 
@@ -341,7 +346,7 @@ void Graphics::Init3dWindow() {
   }
 
   // Rebuild window now that we have proper information about the GL extensions
-  glfwWindowHint(GLFW_SAMPLES, 16);  // 16x Multisampling
+  glfwWindowHint(GLFW_SAMPLES, 16); // 16x Multisampling
   window_ = glfwCreateWindow(windx_, windy_, "2D Sphero", NULL, NULL);
 
   if (!window_) {
@@ -350,8 +355,8 @@ void Graphics::Init3dWindow() {
   }
 
   glfwMakeContextCurrent(window_);
-  glfwSwapInterval(0);  // Swap buffers immediately
-  glewInit();           // Get GL extensions for current context
+  glfwSwapInterval(0); // Swap buffers immediately
+  glewInit();          // Get GL extensions for current context
 
   /* FIXME: this probably does nothing nowadays */
   /* Material properties. */
@@ -402,16 +407,16 @@ void Graphics::Init3dWindow() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(-60.0, 1.0, 1.5 * unit_cell_[8] / 2.0,
-                 10.0 * 1.5 * unit_cell_[8] / 2.0);  // deprecated
+                 10.0 * 1.5 * unit_cell_[8] / 2.0); // deprecated
 
   /* establish initial viewport */
   glfwGetFramebufferSize(window_, &windx_, &windy_);
   glViewport(0, 0, windx_, windy_);
 }
 
-void Graphics::InitColormap() {  // Pretty straight forward. Builds
-                                 // colormap. Automatic for all instances of
-                                 // Graphics class after Init() call
+void Graphics::InitColormap() { // Pretty straight forward. Builds
+                                // colormap. Automatic for all instances of
+                                // Graphics class after Init() call
   /* Loop over colormap indices. */
   for (int i_color = 0; i_color < n_rgb_; ++i_color) {
     GLfloat red, green, blue;
@@ -449,11 +454,11 @@ void Graphics::InitColormap() {  // Pretty straight forward. Builds
 }
 
 void Graphics::DrawDiscorectangles() {
-  glMatrixMode(GL_MODELVIEW);  // Make sure we're using the model transform
+  glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
 
   // Tells gl to use the appropriate shader for the discorectangle
-  glUseProgram(discorectangle_.program_);  // This could be moved to a
-                                           // GraphicsPrimitive method.
+  glUseProgram(discorectangle_.program_); // This could be moved to a
+                                          // GraphicsPrimitive method.
 
   // spherocylinder takes two parameters, half its length, and its diameter
   // Get location of half_l and diameter parameters, this shouldn't need to be
@@ -467,12 +472,12 @@ void Graphics::DrawDiscorectangles() {
   // Prep to send vertex data to shader
   glEnableVertexAttribArray(discorectangle_.attributes_.position);
   glBindBuffer(GL_ARRAY_BUFFER, discorectangle_.vertex_buffer_);
-  glVertexAttribPointer(discorectangle_.attributes_.position,  // attribute
-                        2,  // number of elements per vertex, here (x,y,z)
-                        GL_FLOAT,  // the type of each element
-                        GL_FALSE,  // take our values as-is
-                        0,         // no extra data between each position
-                        (void *)0  // offset of first element
+  glVertexAttribPointer(discorectangle_.attributes_.position, // attribute
+                        2,        // number of elements per vertex, here (x,y,z)
+                        GL_FLOAT, // the type of each element
+                        GL_FALSE, // take our values as-is
+                        0,        // no extra data between each position
+                        (void *)0 // offset of first element
   );
 
   // Use the element buffer (numerical pointer to each set of vertices that make
@@ -482,7 +487,7 @@ void Graphics::DrawDiscorectangles() {
   // Set default bond color
   GLfloat color[4] = {0.0, 0.0, 1.0, 1.0};
   for (auto it = graph_array_->begin(); it != graph_array_->end(); ++it) {
-    double theta = atan2((*it)->u[1], (*it)->u[0]);  // rotation angle
+    double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
     double theta_color = 0;
     // Check draw type
     if ((*it)->draw == +draw_type::fixed) {
@@ -511,12 +516,12 @@ void Graphics::DrawDiscorectangles() {
 
       glColor4fv(&colormap_[color_index * 4]);
     }
-    glPushMatrix();  // Duplicate current modelview
+    glPushMatrix(); // Duplicate current modelview
     {
       glTranslatef((*it)->r[0], (*it)->r[1] - z_correct_,
-                   0.0);  // Translate rod
+                   0.0); // Translate rod
       glRotatef((GLfloat)((theta / M_PI) * 180.0 - 90.0), 0.0, 0.0,
-                1.0);  // rotate rod
+                1.0); // rotate rod
 
       // Tell shader about our spherocylinder parameters
       double half_length = 0.5 * (*it)->length;
@@ -524,22 +529,113 @@ void Graphics::DrawDiscorectangles() {
       glUniform1f(discorectangle_.uniforms_.diameter, (*it)->diameter);
       glDrawElements(GL_TRIANGLES, discorectangle_.n_triangles_ * 3,
                      GL_UNSIGNED_SHORT,
-                     (void *)0);  // draw.
+                     (void *)0); // draw.
     }
-    glPopMatrix();  // restore default modelview
+    glPopMatrix(); // restore default modelview
   }
   glDisableVertexAttribArray(
       discorectangle_.attributes_
-          .position);  // Tell GL to forget about our vertex array
+          .position); // Tell GL to forget about our vertex array
+}
+
+void Graphics::DrawSPBs() {
+
+  if (spbs_.empty()) {
+    return;
+  }
+  qobj_ = gluNewQuadric();
+  gluQuadricCallback(qobj_, GLU_ERROR, NULL);
+  gluQuadricDrawStyle(qobj_, GLU_FILL);
+  gluQuadricNormals(qobj_, GLU_SMOOTH);
+  for (auto &&spb : spbs_) {
+    double clength = spb->GetLength();
+    // Direction of the SPB
+    double phi = atan2(spb->GetU(1), spb->GetU(0));
+    double theta = acos(spb->GetU(2));
+    // The anchor points in the uhat direction
+    double v0 = spb->GetR(0) - 0.5 * clength * spb->GetU(0);
+    double v1 = spb->GetR(1) - 0.5 * clength * spb->GetU(1);
+    double v2 = spb->GetR(2) - 0.5 * clength * spb->GetU(2);
+    // Set the color
+    GLfloat color[4] = {0.0, 0.0, 1.0, 1.0}; // default bond color
+    double L = 0.3 * spb->GetOrientation()[2] + 0.5;
+    double C = (1 - ABS(2 * L - 1));
+    double H_prime = 3.0 * theta / M_PI;
+    double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
+    if (H_prime < 0.0) {
+      color[0] = 0.0;
+      color[1] = 0.0;
+      color[2] = 0.0;
+    } else if (H_prime < 1.0) {
+      color[0] = C;
+      color[1] = X;
+      color[2] = 0;
+    } else if (H_prime < 2.0) {
+      color[0] = X;
+      color[1] = C;
+      color[2] = 0;
+    } else if (H_prime < 3.0) {
+      color[0] = 0;
+      color[1] = C;
+      color[2] = X;
+    } else if (H_prime < 4.0) {
+      color[0] = 0;
+      color[1] = X;
+      color[2] = C;
+    } else if (H_prime < 5.0) {
+      color[0] = X;
+      color[1] = 0;
+      color[2] = C;
+    } else if (H_prime < 6.0) {
+      color[0] = C;
+      color[1] = 0;
+      color[2] = X;
+    }
+    double m = L - 0.5 * C;
+    color[0] = color[0] + m;
+    color[1] = color[1] + m;
+    color[2] = color[2] + m;
+    glColor4fv(color);
+    glPushMatrix();
+    glTranslatef(v0, v1, v2);
+    if (phi != 0.0)
+      glRotatef((GLfloat)((phi / M_PI) * 180.0), 0.0, 0.0, 1.0);
+    if (theta != 0.0)
+      glRotatef((GLfloat)((theta / M_PI) * 180.0), 0.0, 1.0, 0.0);
+    gluQuadricOrientation(qobj_, GLU_OUTSIDE);
+    // if (tomogram_view_ <= 1) {
+    gluCylinder(qobj_, 0.5 * spb->GetDiameter(), 0.5 * spb->GetDiameter(),
+                clength, 16, 1);
+    gluQuadricOrientation(qobj_, GLU_INSIDE);
+    gluDisk(qobj_, 0.0, 0.5 * spb->GetDiameter(), 16, 16);
+    // }
+    glPopMatrix();
+    v0 = spb->GetR(0) + 0.5 * clength * spb->GetU(0);
+    v1 = spb->GetR(1) + 0.5 * clength * spb->GetU(1);
+    v2 = spb->GetR(2) + 0.5 * clength * spb->GetU(2);
+    glPushMatrix();
+    glTranslatef(v0, v1, v2);
+    if (phi != 0.0)
+      glRotatef((GLfloat)((phi / M_PI) * 180.0), 0.0, 0.0, 1.0);
+    if (theta != 0.0)
+      glRotatef((GLfloat)((theta / M_PI) * 180.0), 0.0, 1.0, 0.0);
+    // if (tomogram_view_ <= 1) {
+    gluQuadricOrientation(qobj_, GLU_OUTSIDE);
+    gluDisk(qobj_, 0.0, 0.5 * spb->GetDiameter(), 16, 16);
+    // }
+    glPopMatrix();
+  }
+  // Remove the quadric
+  gluDeleteQuadric(qobj_);
 }
 
 void Graphics::Draw2d() {
   KeyInteraction();
-  UpdateWindow();  // Recalculate window parameters (in case of resize)
+  UpdateWindow(); // Recalculate window parameters (in case of resize)
   DrawDiscorectangles();
   DrawBoundary();
   // DrawText();
-  glfwSwapBuffers(window_);  // Print frame to screen
+  glfwSwapBuffers(window_); // Print frame to screen
 }
 
 // void Graphics::DrawText() {
@@ -610,7 +706,7 @@ void Graphics::Draw2d() {
 //}
 
 void Graphics::DrawSpheros() {
-  glMatrixMode(GL_MODELVIEW);  // Use modelview matrix
+  glMatrixMode(GL_MODELVIEW); // Use modelview matrix
 
   /* Don't draw back facing triangles (as they would be occluded anyway */
   glEnable(GL_CULL_FACE);
@@ -626,19 +722,19 @@ void Graphics::DrawSpheros() {
   /* Prep to send vertex data to shader */
   glEnableVertexAttribArray(spherocylinder_.attributes_.position);
   glBindBuffer(GL_ARRAY_BUFFER, spherocylinder_.vertex_buffer_);
-  glVertexAttribPointer(spherocylinder_.attributes_.position,  // attribute
-                        3,  // number of elements per vertex, here (x,y,z)
-                        GL_FLOAT,  // the type of each element
-                        GL_FALSE,  // take our values as-is
-                        0,         // no extra data between each position
-                        (void *)0  // offset of first element
+  glVertexAttribPointer(spherocylinder_.attributes_.position, // attribute
+                        3,        // number of elements per vertex, here (x,y,z)
+                        GL_FLOAT, // the type of each element
+                        GL_FALSE, // take our values as-is
+                        0,        // no extra data between each position
+                        (void *)0 // offset of first element
   );
 
   /* Use the element buffer (numerical pointer to each set of vertices that make
    * a triangle) */
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spherocylinder_.element_buffer_);
 
-  GLfloat color[4] = {0.0, 0.0, 1.0, 1.0};  // default bond color
+  GLfloat color[4] = {0.0, 0.0, 1.0, 1.0}; // default bond color
   // for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
   for (auto it = graph_array_->begin(); it != graph_array_->end(); ++it) {
     /* Determine phi rotation angle, amount to rotate about y. */
@@ -649,7 +745,8 @@ void Graphics::DrawSpheros() {
     double length_xy = sqrt(SQR((*it)->u[0]) + SQR((*it)->u[1]));
     if (length_xy > 0.0) {
       theta = acos((*it)->u[0] / length_xy);
-      if ((*it)->u[1] < 0.0) theta = (2.0 * M_PI) - theta;
+      if ((*it)->u[1] < 0.0)
+        theta = (2.0 * M_PI) - theta;
     }
     color[3] = alpha_;
     std::string d_type((*it)->draw._to_string());
@@ -727,7 +824,8 @@ void Graphics::DrawSpheros() {
     glTranslatef(v0, v1, v2);
     if (theta != 0.0)
       glRotatef((GLfloat)((theta / M_PI) * 180.0), 0.0, 0.0, 1.0);
-    if (phi != 0.0) glRotatef((GLfloat)((phi / M_PI) * 180.0), 0.0, 1.0, 0.0);
+    if (phi != 0.0)
+      glRotatef((GLfloat)((phi / M_PI) * 180.0), 0.0, 1.0, 0.0);
 
     /* Send data to shader to be drawn */
     glDrawElements(GL_TRIANGLES, spherocylinder_.n_triangles_ * 3,
@@ -741,6 +839,7 @@ void Graphics::DrawSpheros() {
 void Graphics::Draw3d() {
   KeyInteraction();
   UpdateWindow();
+  DrawSPBs();
   DrawSpheros();
   DrawBoundary();
   // DrawText();
@@ -748,7 +847,8 @@ void Graphics::Draw3d() {
 }
 
 void Graphics::DrawBoundary() {
-  if (boundary_ == +boundary_type::none) return;
+  if (boundary_ == +boundary_type::none)
+    return;
   glUseProgram(0);
 
   GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
@@ -762,12 +862,77 @@ void Graphics::DrawBoundary() {
     if (n_dim_ == 2)
       // DrawWireSphere(0.5*unit_cell_[0], 3, 32);
       DrawWireSphere(0.5 * unit_cell_[0], 32, 32);
-    if (n_dim_ == 3) DrawWireSphere(0.5 * unit_cell_[0], 16, 16);
+    if (n_dim_ == 3)
+      DrawWireSphere(0.5 * unit_cell_[0], 16, 16);
 
   } else if (boundary_ == +boundary_type::box)
     DrawBox();
   else if (boundary_ == +boundary_type::budding)
     DrawBudding();
+  else if (boundary_ == +boundary_type::mesh)
+    DrawMesh();
+}
+
+void Graphics::DrawMesh() {
+  glDisable(GL_LIGHTING);
+
+  glDisable(GL_CULL_FACE);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // for filled faces
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // for wire mesh
+
+  // draw faces
+  glBegin(GL_TRIANGLES);
+  for (auto &&tri : membrane_->tris_) {
+    // glColor3f(0.8f, 0.8f, 0.8f);
+    // glColor3f(tri.color_[0] / 255, tri.color_[1] / 255, tri.color_[2] / 255);
+    // glVertex3f(tri.vrts_[2]->pos_[0], tri.vrts_[2]->pos_[1],
+    //            tri.vrts_[2]->pos_[2]);
+    // glColor3f(0.5f, 0.5f, 0.5f);
+    glNormal3f(tri.nhat_[0], tri.nhat_[1], tri.nhat_[2]);
+    // glVertex3f(tri.vrts_[0]->pos_[0], tri.vrts_[0]->pos_[1],
+    //            tri.vrts_[0]->pos_[2]);
+    // glVertex3f(tri.vrts_[1]->pos_[0], tri.vrts_[1]->pos_[1],
+    //            tri.vrts_[1]->pos_[2]);
+  }
+  glEnd();
+  glBegin(GL_LINES);
+  for (auto &&edge : membrane_->edges_) {
+    glVertex3f(edge.vrts_[0]->pos_[0], edge.vrts_[0]->pos_[1],
+               edge.vrts_[0]->pos_[2]);
+    glVertex3f(edge.vrts_[1]->pos_[0], edge.vrts_[1]->pos_[1],
+               edge.vrts_[1]->pos_[2]);
+  }
+  glEnd();
+  glEnable(GL_CULL_FACE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  glEnable(GL_LIGHTING);
+  // draw normals
+  /*
+  glDisable(GL_LIGHTING);
+  glBegin(GL_LINES);
+  for (auto &&tri : membrane_->tris_) {
+    double cent_x{tri.GetCenterPos(0)};
+    double cent_y{tri.GetCenterPos(1)};
+    double cent_z{tri.GetCenterPos(2)};
+    // double to_origin[3] = {-cent_x, -cent_y, -cent_z};
+    double r_origin[3];
+    for (int i_dim{0}; i_dim < 3; i_dim++) {
+      r_origin[i_dim] = tri.GetCenterPos(i_dim) - membrane_->origin_[i_dim];
+    }
+    // hot pink for pointing outwards, green for inwards (should NEVER be inwards)
+    if (dot_product(3, r_origin, tri.nhat_) > 0.0) {
+      glColor3f(0.0f, 1.0f, 0.0f);
+    } else {
+      glColor3f(0.966f, 0.41f, 0.703f);
+    }
+    glVertex3f(cent_x, cent_y, cent_z);
+    // printf("center at (%g, %g, %g)\n", cent_x, cent_y, cent_z);
+    double scale{membrane_->r_sys_ / 20.0};
+    glVertex3f(cent_x + scale * tri.nhat_[0], cent_y + scale * tri.nhat_[1],
+               cent_z + scale * tri.nhat_[2]);
+  }
+  glEnd();
+  */
 }
 
 void Graphics::DrawWireSphere(double r, int lats, int longs) {
@@ -1215,12 +1380,11 @@ void Graphics::InitDiscoRectangle() {
   }
 
   /* Fragment shader source code */
-  const char *fs =
-      "#version 120\n"
-      "void main()"
-      "{"
-      "gl_FragColor = gl_Color;"
-      "}";
+  const char *fs = "#version 120\n"
+                   "void main()"
+                   "{"
+                   "gl_FragColor = gl_Color;"
+                   "}";
 
   discorectangle_.fragment_shader_ = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(discorectangle_.fragment_shader_, 1, &fs, NULL);

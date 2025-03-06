@@ -112,5 +112,5 @@ void Bond::ZeroOrientationCorrelation() {
   std::copy(orientation_, orientation_ + 3, orientation_0_);
 }
 //double const Bond::GetInteractorLength() {
-  //return length_ < 0.35 ? 0.1 : length_ - 0.25;
+//return length_ < 0.35 ? 0.1 : length_ - 0.25;
 //}

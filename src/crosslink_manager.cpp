@@ -16,6 +16,10 @@ void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser,
   }
   xlink_species_.push_back(new CrosslinkSpecies(seed));
   xlink_species_.back()->Init(slab.second, parser);
+  Logger::Trace("Crosslinker species %s was added",
+                (xlink_species_.back()->GetSpeciesName()).c_str());
+  species_map_[(xlink_species_.back()->GetSpeciesName()).c_str()] =
+      xlink_species_.back();
   if (xlink_species_.back()->GetNInsert() <= 0) {
     delete xlink_species_.back();
     xlink_species_.pop_back();

@@ -2,10 +2,10 @@
 #define _CGLASS_PARAMETERS_H_
 
 #include "definitions.hpp"
-
 #include <string>
 
-template <unsigned char S> struct species_parameters {
+template <unsigned char S>
+struct species_parameters {
   std::string name = "species";
   int num = 0;
   double diameter = 1;
@@ -19,21 +19,47 @@ template <unsigned char S> struct species_parameters {
   bool spec_flag = false;
   int n_posit = 100;
   int n_spec = 100;
+  bool stationary_flag = false;
   virtual ~species_parameters() {}
 };
 
 typedef species_parameters<species_id::none> species_base_parameters;
 
 template <>
+struct species_parameters<species_id::centrosome>
+    : public species_base_parameters {
+  std::string filament_species_name = "NULL";
+  int num_anchors_ea = 0;
+  double attach_diameter = 0.0;
+  double diffusion = 0.0;
+  double wall_f0 = 0.0;
+  double wall_ne = 0.0;
+  double wall_kr = 0.0;
+};
+typedef species_parameters<species_id::centrosome> centrosome_parameters;
+
+template <>
+struct species_parameters<species_id::chromosome>
+    : public species_base_parameters {
+
+  double n_attached = 0;
+  double translational_noise = 0;
+  double rotational_noise = 0;
+  // bool zero_temperature = false;
+};
+typedef species_parameters<species_id::chromosome> chromosome_parameters;
+
+template <>
 struct species_parameters<species_id::rigid_filament>
     : public species_base_parameters {
   double max_length = 500;
   double min_length = 5;
-  bool stationary_flag = false;
+  bool constrain_motion_flag = false;
   double packing_fraction = -1;
   int n_equil = 0;
 };
-typedef species_parameters<species_id::rigid_filament> rigid_filament_parameters;
+typedef species_parameters<species_id::rigid_filament>
+    rigid_filament_parameters;
 
 template <>
 struct species_parameters<species_id::filament>
@@ -138,7 +164,8 @@ struct species_parameters<species_id::spherocylinder>
   int n_diffusion_samples = 1;
   bool midstep = false;
 };
-typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters;
+typedef species_parameters<species_id::spherocylinder>
+    spherocylinder_parameters;
 
 template <>
 struct species_parameters<species_id::spindle>
@@ -263,6 +290,20 @@ struct system_parameters {
   bool checkpoint_flag = false;
   int n_checkpoint = 10000;
   bool no_midstep = false;
+  bool mesh_membrane = false;
+  size_t mesh_datapoints = 10000;
+  size_t mesh_steps_per_datapoint = 10;
+  double mesh_shrink_rate = 0.0;
+  double mesh_kB = 0.0;
+  double mesh_k = 0.0;
+  double mesh_kl = 0.0;
+  double mesh_kV = 0.0;
+  size_t n_subdivisions = 0;
+  double node_diameter = 0.0;
+  double node_gamma = 0.0;
+  bool draw_centroid = false;
+  bool draw_mindist = false;
+  bool enable_flipping = false;
 };
 
 #endif // _CGLASS_PARAMETERS_H_

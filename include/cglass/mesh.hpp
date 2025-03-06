@@ -7,12 +7,12 @@ typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
 
 class Mesh : public Object {
- private:
+private:
   static int _next_mesh_id_;
   static std::mutex _mesh_mtx_;
   void InitMeshID();
 
- protected:
+protected:
   bool anchored_ = false;
   bool midstep_ = true;
   bool posits_only_ = false;
@@ -34,7 +34,7 @@ class Mesh : public Object {
   void AddSite(Site s);
   void AddBond(Site *s1, Site *s2);
 
- public:
+public:
   Mesh(unsigned long seed);
   void InitSiteAt(double *new_pos, double d);
   void InitBondAt(double *new_pos, double *u, double l, double d);
@@ -91,6 +91,18 @@ class Mesh : public Object {
   virtual const bool CheckInteractorUpdate();
   virtual const double GetLambdaAtBond(int bond_oid);
   virtual const double GetTrueLength() const;
+
+  // experimental stuff added by ya boi Shane
+  double const GetLength() { return length_; }
+  double const *const GetHeadPosition() {
+    return sites_[n_sites_ - 1].GetPosition();
+  }
+  double const *const GetTailPosition() { return sites_[0].GetPosition(); }
+  double const *const GetTailOrientation() {
+    return sites_[0].GetOrientation();
+  }
+  void AddTorqueTail(double *t) { bonds_[0].AddTorque(t); }
+  void AddForceTail(double *f) { sites_[0].AddForce(f); }
 };
 
-#endif  // _CGLASS_MESH_H_
+#endif // _CGLASS_MESH_H_

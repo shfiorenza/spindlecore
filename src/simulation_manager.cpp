@@ -347,7 +347,7 @@ void SimulationManager::GenerateParameters() {
       j_var = n_var_ / (k_var * s);
       i_var = 0;
       for (int j = 0; j < j_var; ++j) {
-        for (int i_param = 1; i_param < s+1; ++i_param) {
+        for (int i_param = 1; i_param < s + 1; ++i_param) {
           for (int k = 0; k < k_var; ++k) {
             pvector_[i_var++][it->first] = it->second[i_param];
           }
@@ -363,7 +363,7 @@ void SimulationManager::GenerateParameters() {
           j_var = n_var_ / (k_var * s);
           i_var = 0;
           for (int j = 0; j < j_var; ++j) {
-            for (int i_param = 1; i_param < s+1; ++i_param) {
+            for (int i_param = 1; i_param < s + 1; ++i_param) {
               for (int k = 0; k < k_var; ++k) {
                 pvector_[i_var++][it->first][jt->first] = jt->second[i_param];
               }
@@ -386,7 +386,7 @@ void SimulationManager::GenerateParameters() {
             j_var = n_var_ / (k_var * s);
             i_var = 0;
             for (int j = 0; j < j_var; ++j) {
-              for (int i_param = 1; i_param < s+1; ++i_param) {
+              for (int i_param = 1; i_param < s + 1; ++i_param) {
                 for (int k = 0; k < k_var; ++k) {
                   pvector_[i_var++][it->first][sub][jt->first] =
                       jt->second[i_param];
@@ -535,8 +535,10 @@ void SimulationManager::WriteParams() {
    those parameters.
    *************************************/
 void SimulationManager::RunSimulations() {
+  int i_counter{0};
   for (std::vector<std::string>::iterator it = pfiles_.begin();
        it != pfiles_.end(); ++it) {
+    printf("sim #%i launched\n", ++i_counter);
     // ParseParams(*it);
     sim_ = new Simulation;
     sim_->Run(YAML::LoadFile(*it));

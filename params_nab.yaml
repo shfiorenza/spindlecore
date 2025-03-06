@@ -1,0 +1,220 @@
+seed: 114222003020845
+run_name: test
+n_dim: 3
+n_periodic: 0
+boundary: 2
+draw_boundary: true
+system_radius: 40
+delta: 1e-4 #1e-5
+dynamic_timestep: true #false
+dynamic_timestep_ramp: 0.0001
+n_steps: 500 # 000
+n_steps_equil: 0
+graph_flag: true
+auto_graph: true
+n_graph: 1
+movie_flag: false
+movie_directory: frames
+invert_background: true
+potential: wca
+wca_sig: 1
+wca_eps: 1
+f_cutoff: 10000
+zero_temperature: false
+checkpoint_flag: false
+n_checkpoint: 100
+mesh_coarsening: 2 # SF this is not related to the below bool/params lol sry
+remove_duplicate_interactions: false   # SF TODO explore this
+coarse_grained_mesh_interactions: false # SF TODO explore this
+mesh_membrane: false # overridden when boundary_Type=5
+mesh_n_subdivisions: 3
+mesh_datapoints: 10000
+mesh_steps_per_datapoint: 1
+mesh_shrink_rate: 0.0 # 1e-4
+mesh_kB: 16.1 # 80.5
+mesh_k: 0.1 #4.0 # 20.1
+mesh_kl: 0.01 # 1 # 5.03
+mesh_kV: 0.03 # 3.0 # 15.2
+mesh_node_gamma: 0.2 # 0.02
+mesh_enable_flipping: false
+mesh_node_diameter: 0.0
+mesh_draw_centroid: true
+mesh_draw_mindist: true
+chromosome: 
+  - name: CHROMO
+    num: 0 # 2
+    length: 5
+    diameter: 2 
+    draw_type: orientation
+    zero_temperature: false
+    translational_noise: 1e-6
+    rotational_noise: 1e-6
+    color: 1.5
+centrosome: 
+  - name: SPB
+    filament_species_name: SPINDLE
+    insertion_type: bioriented # normal change 'normal' to 'adjacent'
+    draw_type: fixed
+    color: 1.5
+    num: 0
+    num_anchors_ea: 6 # 5 
+    length: 0.5
+    diameter: 9.5
+    attach_diameter: 1.0 # 6.5
+    diffusion: 0.0256 # 2.56 
+    wall_f0: 10.341
+    wall_ne: 24.615
+    wall_kr: 9999 # 9999 # 999.99
+    spec_flag: false
+    posit_flag: false
+rigid_filament:
+  - name: bulk # SPANDLE
+   # draw_type: orientation
+    insertion_type: random # spb_anchored
+    num: 0
+    length: 1
+filament:
+  - name: bulk #SPINDLE
+    insertion_type: random # spb_anchored
+    draw_type: orientation
+    color: 2
+    num: 12 # 12 #5 # 10
+    length: 70 # 5
+    min_length: 2
+    max_length: 120 # 110  # SF TODO no upper cap in NAB -- possible in C-GLASS?
+    min_bond_length: 1
+    polydispersity_flag: false
+    persistence_length: 800 # 2 mm
+    diameter: 1
+    dynamic_instability_flag: true
+    v_poly: 15 # 0.09730666667
+    v_depoly: 0.159
+    f_grow_to_pause: 0.0
+    f_grow_to_shrink: 0.0 #0.00237458231883
+    f_pause_to_grow: 1 # 0.02
+    f_pause_to_shrink: 0.0
+    f_shrink_to_grow: 1 # 9.315333333e-05
+    f_shrink_to_pause: 0.0
+    force_induced_catastrophe_flag: true
+    fic_factor: 0.0828   # equiv to 'chromatid_mt_fc_factor'
+    # partner_destab_A: -0.61550307   # SF TODO explore
+    # partner_destab_B: 0.28391844    # SF TODO explore
+    # partner_destab_k: 1.3488364     # SF TODO explore
+    posit_flag: true
+    spec_flag: true
+    n_spec: 10
+    n_posit: 10
+crosslink:
+  - name: kinesin-5 # plus-end motor (two walking heads)
+    insertion_type: random
+    draw_type: fixed
+    tether_draw_type: fixed
+    tether_diameter: 0.3
+    tether_color: 4.67
+    diameter: 1.2  # SF check if this has physical implications or just GFX
+    concentration: 3 # 3.3  # SF TODO calculate
+    infinite_reservoir_flag: false
+    use_binding_volume: false
+    k_spring: 45.29
+    k_spring_compress: -1.
+    k_align: 0
+    rest_length: 2.12
+    diffusion_s: 0.0
+    diffusion_d: 0.0
+    anchors:
+      - bind_file:
+        color: 4.67
+        k_on_s: 1.0  # SF TODO convert
+        k_on_d: 10.0  # SF TODO convert
+        k_off_s: 0.003916  # SF TODO check
+        k_off_d: 0.001958  # SF TODO check
+        velocity_s: 0.142
+        velocity_d: 0.071  # SF implement poleward-dependent velocity? 
+    step_direction: 1
+    plus_end_pausing: true
+    minus_end_pausing: false
+    force_dep_vel_flag: false
+    f_stall: 30.2
+    polar_affinity: 1.0
+    energy_dep_factor: 0
+    force_dep_length: 0
+    spec_flag: false
+    n_spec: 100
+  - name: kinesin-14 # minus-end motor (just 1 walking head)
+    insertion_type: random
+    draw_type: fixed
+    tether_draw_type: fixed
+    tether_diameter: 0.3
+    tether_color: 3.33
+    diameter: 1.2  # SF check if this has physical implications or just GFX
+    concentration: 0.3 # 0.045 # 4.5  # SF TODO calculate
+    infinite_reservoir_flag: false
+    use_binding_volume: false
+    k_spring: 45.29
+    k_spring_compress: -1.
+    k_align: 0
+    rest_length: 2.12
+    diffusion_s: 0.0
+    diffusion_d: 0.0
+    anchors:
+      - bind_file:
+        color: 3.33
+        k_on_s: 1.0  # SF TODO convert
+        k_on_d: 10.0  # SF TODO convert
+        k_off_s: 0.003916  # SF TODO check
+        k_off_d: 0.001958  # SF TODO check
+        velocity_s: 0.071
+        velocity_d: 0.071  # SF implement poleward-dependent velocity? 
+      - bind_file:
+        color: 2.67
+        k_on_s: 1.0  # SF TODO convert
+        k_on_d: 10.0  # SF TODO convert
+        k_off_s: 0.003916  # SF TODO check
+        k_off_d: 0.001958  # SF TODO check
+        velocity_s: 0.0
+        velocity_d: 0.0  # SF implement poleward-dependent velocity? 
+    step_direction: 1
+    plus_end_pausing: true
+    minus_end_pausing: false
+    force_dep_vel_flag: false
+    f_stall: 30.2
+    polar_affinity: 1.0
+    energy_dep_factor: 0
+    force_dep_length: 0
+    spec_flag: false
+    n_spec: 100
+  - name: ase1 # passive crosslinker (no walking heads)
+    insertion_type: random
+    draw_type: fixed
+    tether_draw_type: fixed
+    tether_diameter: 0.3
+    tether_color: 1.33
+    diameter: 1.2  # SF check if this has physical implications or just GFX
+    concentration: 0.3 # 0.033 # 3.3  # SF TODO calculate
+    infinite_reservoir_flag: false
+    use_binding_volume: false
+    k_spring: 31.55
+    k_spring_compress: -1.
+    k_align: 0
+    rest_length: 2.12
+    diffusion_s: 5.76
+    diffusion_d: 0.386
+    anchors:
+      - bind_file:
+        color: 1.33
+        k_on_s: 1.0  # SF TODO convert
+        k_on_d: 10.0  # SF TODO convert
+        k_off_s: 0.003916  # SF TODO check
+        k_off_d: 0.001958  # SF TODO check
+        velocity_s: 0.0
+        velocity_d: 0.0  # SF implement poleward-dependent velocity? 
+    step_direction: 1
+    plus_end_pausing: true
+    minus_end_pausing: false
+    force_dep_vel_flag: false
+    f_stall: 30.2
+    polar_affinity: 1.0
+    energy_dep_factor: 0
+    force_dep_length: 0
+    spec_flag: false
+    n_spec: 100        

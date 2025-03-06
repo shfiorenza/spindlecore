@@ -46,6 +46,7 @@ public:
   virtual const bool CanOverlap() const { return -1; }
   species_id const GetSID() const { return sid_; }
   virtual void Report() {}
+  virtual Object *GetMember(int i) { return nullptr; }
   virtual int const GetNMembers() const { return n_members_; }
   virtual int const GetNInsert() const { return -1; }
   virtual int const GetNPosit() const { return -1; }

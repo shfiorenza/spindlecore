@@ -56,6 +56,9 @@ void InteractionManager::ApplyInteractions() {
   if (!no_interactions_) {
     ApplyPairInteractions();
   }
+  if (spbs_ != nullptr) {
+    spbs_->ApplyInteractions();
+  }
   ApplyBoundaryInteractions();
 }
 
@@ -325,12 +328,12 @@ void InteractionManager::ZeroDrTot() {
 }
 
 void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
-  if (processing_ ) {
+  if (processing_) {
     mindist_.ObjectObject(*ix);
-     //Check to see if particles are not close enough to interact
+    //Check to see if particles are not close enough to interact
     if (ix->dr_mag2 > potentials_.GetRCut2())
       return;
-     //Calculates forces from the potential defined during initialization
+    //Calculates forces from the potential defined during initialization
     potentials_.CalcPotential(*ix);
     return;
   }
@@ -393,6 +396,15 @@ void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
     xlink_.AddNeighborToAnchor(obj2, obj1);
     return;
   }
+  // if (obj1->GetSID() == +species_id::chromosome) {
+  //   printf("chromo 1 @ (%g, %g, %g)\n", obj1->GetPosition()[0],
+  //          obj1->GetPosition()[1], obj1->GetPosition()[2]);
+  // }
+  // if (obj2->GetSID() == +species_id::chromosome) {
+  //   printf("chromo 2 @ (%g, %g, %g)\n", obj2->GetPosition()[0],
+  //          obj2->GetPosition()[1], obj2->GetPosition()[2]);
+  // }
+
   mindist_.ObjectObject(*ix);
 
   // Check for particle overlaps

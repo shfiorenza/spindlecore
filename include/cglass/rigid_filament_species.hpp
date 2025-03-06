@@ -6,10 +6,11 @@
 
 class RigidFilamentSpecies
     : public Species<RigidFilament, species_id::rigid_filament> {
- protected:
+protected:
   double fill_volume_;
   double packing_fraction_;
- public:
+
+public:
   RigidFilamentSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();
@@ -17,6 +18,7 @@ class RigidFilamentSpecies
   void AddMember();
 
   void Reserve();
+  void CustomInsert();
   void UpdatePositions();
   // Redundant for filaments.
   virtual void CenteredOrientedArrangement() {}

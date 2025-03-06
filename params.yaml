@@ -5,13 +5,14 @@ n_periodic: 2
 delta: 0.005
 dynamic_timestep: true
 dynamic_timestep_ramp: 0.0001
-n_steps: 10000000
+n_steps: 10000 #0 #00
 n_steps_equil: 0
 boundary: 0
 graph_flag: true
 auto_graph: false
-n_graph: 500
-movie_flag: false
+n_graph: 10
+movie_flag: true
+movie_directory: "frames"
 zero_temperature: false
 system_radius: 30
 potential: wca

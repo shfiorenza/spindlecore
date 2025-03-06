@@ -1,4 +1,5 @@
 #include "cglass/minimum_distance.hpp"
+#include "cglass/triangle_mesh.hpp"
 
 #define SMALL 1.0e-12
 
@@ -950,6 +951,455 @@ bool MinimumDistance::CheckOutsideBoundary(Object &obj) {
   }
   r_mag += SQR(r[n_dim_ - 1] + sign * 0.5 * l * u[n_dim_ - 1] - z0);
   return (r_mag > SQR(r_boundary - 0.5 * d));
+}
+
+// Finds the minimum distance from a rod to a polygon described in the triangle mesh
+// OUTPUTS
+// rmin: minimum r vector from point on rod to point on polygon
+// rminmag2: squared minimum distance
+// rcontact: lab coordinate of contact point on polygon
+// mu: distance along rod for contact
+int MinimumDistance::SpheroPolygon(TriMesh *polygon, double *r_1, double *s_1,
+                                   double *u_1, double length_1, double *rmin,
+                                   double *rminmag2, double *rcontact,
+                                   double *mu) {
+  size_t n_dim{3};
+  double r1[3] = {0.0};
+  double r2[3] = {0.0};
+  double t, dist;
+  double xRot, yRot;
+
+  // Convert to the tirangle mesh representation
+  // r1 and r2 are simply the endpoints of each filament
+  for (int i = 0; i < n_dim; ++i) {
+    r1[i] = r_1[i] - 0.5 * length_1 * u_1[i];
+    r2[i] = r_1[i] + 0.5 * length_1 * u_1[i];
+  }
+
+  // printf("\nr1 = <%g, %g, %g>\n", r1[0], r1[1], r1[2]);
+  // printf("r2 = <%g, %g, %g>\n", r2[0], r2[1], r2[2]);
+
+  // Run the other version
+  int itri = SegmentToPolygon(polygon, r1[0], r1[1], r1[2], r2[0], r2[1], r2[2],
+                              &t, &xRot, &yRot, &dist, rcontact);
+  // Convert to what we need
+  *rminmag2 = dist * dist;
+  *mu = (t - 0.5) * length_1;
+  for (int i = 0; i < n_dim; ++i) {
+    rmin[i] = rcontact[i] - (r_1[i] + *mu * u_1[i]);
+  }
+  return itri;
+}
+
+// Minimum distance from segment to a polygon
+// INPUT
+// (x, y, z) line segment
+// tri triangle mesh
+// RETURN: triangle number in mesh
+// OUTPUT
+// t fractional distance along segment
+// (xRot, yRot) rotated coordinates of point on triangle mesh
+// dist distance of closest approach
+// rcontact lab frame coordinates of closest point of approach on polygon
+int MinimumDistance::SegmentToPolygon(TriMesh *polygon, double xStart,
+                                      double yStart, double zStart, double xEnd,
+                                      double yEnd, double zEnd, double *t,
+                                      double *xRot, double *yRot, double *dist,
+                                      double *rcontact) {
+  // Set dist to something large
+  int itriang = 0;
+  *dist = 1e10;
+  // for (int itri = 0; itri < tri->numTriang; ++itri) {
+  for (int itri{0}; itri < polygon->tris_.size(); itri++) {
+    // printf("itri = %i\n", itri);
+    double tt, txRot, tyRot, tdist;
+    SegmentToTriangle(&polygon->tris_[itri], xStart, yStart, zStart, xEnd, yEnd,
+                      zEnd, &tt, &txRot, &tyRot, &tdist);
+    // segment_to_triangle(xStart, yStart, zStart, xEnd, yEnd, zEnd, tri, itri,
+    //                     &tt, &txRot, &tyRot, &tdist);
+    if (tdist < *dist) {
+      *dist = tdist;
+      *t = tt;
+      *xRot = txRot;
+      *yRot = tyRot;
+      itriang = itri;
+    }
+  }
+
+  // undo the rotation
+  double xPrime =
+      *xRot * polygon->tris_[itriang].cosBeta_ +
+      polygon->tris_[itriang].Zrot_ * polygon->tris_[itriang].sinBeta_;
+  rcontact[0] = xPrime * polygon->tris_[itriang].cosGamma_ +
+                *yRot * polygon->tris_[itriang].sinGamma_;
+  rcontact[1] = -xPrime * polygon->tris_[itriang].sinGamma_ +
+                *yRot * polygon->tris_[itriang].cosGamma_;
+  rcontact[2] =
+      -(*xRot) * polygon->tris_[itriang].sinBeta_ +
+      polygon->tris_[itriang].Zrot_ * polygon->tris_[itriang].cosBeta_;
+  //std::cout << "Contact (" << rcontact[0] << ", "
+  //                         << rcontact[1] << ", "
+  //                         << rcontact[2] << ")\n";
+
+  return itriang;
+}
+
+// line segment to triangle calculation
+// INPUT
+// (x, y, z) segment line begin/end
+// tri, itriang triangle to calculate distance to
+// OUTPUT
+// (xRot, yRot) rotated point of closest approach to triangle
+// dist distance of closest approach
+// t fractional distance along line
+void MinimumDistance::SegmentToTriangle(Triangle *tri, double xStart,
+                                        double yStart, double zStart,
+                                        double xEnd, double yEnd, double zEnd,
+                                        double *t, double *xRot, double *yRot,
+                                        double *dist) {
+  // Variables needed for running
+  bool startIn, endIn;
+  double temp;
+  double xStartRot, yStartRot, zStartRot;
+  double xEndRot, yEndRot, zEndRot;
+
+  // Rotate the endpoints
+  temp = xStart * tri->cosGamma_ - yStart * tri->sinGamma_;
+  xStartRot = temp * tri->cosBeta_ - zStart * tri->sinBeta_;
+  yStartRot = xStart * tri->sinGamma_ + yStart * tri->cosGamma_;
+  zStartRot = temp * tri->sinBeta_ + zStart * tri->cosBeta_;
+  temp = xEnd * tri->cosGamma_ - yEnd * tri->sinGamma_;
+  xEndRot = temp * tri->cosBeta_ - zEnd * tri->sinBeta_;
+  yEndRot = xEnd * tri->sinGamma_ + yEnd * tri->cosGamma_;
+  zEndRot = temp * tri->sinBeta_ + zEnd * tri->cosBeta_;
+  // std::cout << "xStartRot (" << xStartRot << ", " << yStartRot << ", "
+  //           << zStartRot << ")\n";
+  // std::cout << "xEndRot   (" << xEndRot << ", " << yEndRot << ", " << zEndRot
+  //           << ")\n";
+  startIn = InsideTriangle(&(tri->XYrot_[0][0]), &(tri->XYrot_[1][0]),
+                           xStartRot, yStartRot);
+  endIn = InsideTriangle(&(tri->XYrot_[0][0]), &(tri->XYrot_[1][0]), xEndRot,
+                         yEndRot);
+  //std::cout << "start/end in (" << startIn << ", " << endIn << ")\n";
+
+  //// TEST ROTATION UNDO
+  //double xprime = xStartRot * cosBeta[itriang] + zStartRot * sinBeta[itriang];
+  //double x2 = xprime * cosGamma[itriang] + yStartRot * sinGamma[itriang];
+  //double y2 = -xprime * sinGamma[itriang] + yStartRot * cosGamma[itriang];
+  //double z2 = -xStartRot * sinBeta[itriang] + zStartRot * cosBeta[itriang];
+  //std::cout << "start undo (" << x2 << ", " << y2 << ", " << z2 << ")\n";
+  //// END TEST
+
+  if (startIn && endIn) {
+    // if both endpoints are over triangle, then one must be closest
+    // unless line passes through triangle
+    if (b3dxor(zStartRot > tri->Zrot_, zEndRot > tri->Zrot_)) {
+      //std::cout << "b3dxor triggered\n";
+      *dist = 0;
+      *t = (tri->Zrot_ - zStartRot) / (zEndRot - zStartRot);
+      *xRot = (1.0 - *t) * xStartRot + *t * xEndRot;
+      *yRot = (1.0 - *t) * yStartRot + *t * yEndRot;
+    } else {
+      //std::cout << "b3dxor not triggered\n";
+      double distEnd = fabs(zStartRot - tri->Zrot_);
+      double distStart = fabs(zEndRot - tri->Zrot_);
+      if (distEnd < distStart) {
+        *dist = distEnd;
+        *xRot = xStartRot;
+        *yRot = yStartRot;
+        *t = 0.;
+      } else {
+        *dist = distStart;
+        *xRot = xEndRot;
+        *yRot = yEndRot;
+        *t = 1.;
+      }
+    }
+    return;
+  }
+  // Set dist to something absurd
+  *dist = 1e10;
+
+  // If one endpoint is over, it is a candidate
+  if (startIn) {
+    *xRot = xStartRot;
+    *yRot = yStartRot;
+    *dist = fabs(zStartRot - tri->Zrot_);
+    *t = 0.;
+  }
+  if (endIn) {
+    *xRot = xEndRot;
+    *yRot = yEndRot;
+    *dist = fabs(zEndRot - tri->Zrot_);
+    *t = 1.;
+  }
+
+  // but still need to check each line segment
+  double dmin = *dist * *dist;
+  int ivMin = -1;
+  int ivNextMin = -1;
+  double t1AtMin, t2AtMin;
+  for (int iv = 0; iv < 3; ++iv) {
+    int ivNext = iv + 1;
+    if (ivNext > 2)
+      ivNext = 0;
+    double t1, t2, dsqr;
+    SegmentDist(tri->XYrot_[0][iv], tri->XYrot_[1][iv], tri->Zrot_,
+                tri->XYrot_[0][ivNext], tri->XYrot_[1][ivNext], tri->Zrot_,
+                xStartRot, yStartRot, zStartRot, xEndRot, yEndRot, zEndRot, &t1,
+                &t2, &dsqr);
+    if (dsqr < dmin) {
+      //std::cout << "  found new minimum distance " << dsqr << std::endl;
+      ivMin = iv;
+      ivNextMin = ivNext;
+      dmin = dsqr;
+      t1AtMin = t1;
+      t2AtMin = t2;
+      //std::cout << "  set t1 " << t1AtMin << ", t2 " << t2AtMin << std::endl;
+    }
+  }
+
+  // If a segment was it, need squre root and rotated position
+  if (ivMin >= 0) {
+    *dist = sqrt(dmin);
+    *xRot = (1.0 - t1AtMin) * tri->XYrot_[0][ivMin] +
+            t1AtMin * tri->XYrot_[0][ivNextMin];
+    *yRot = (1.0 - t1AtMin) * tri->XYrot_[1][ivMin] +
+            t1AtMin * tri->XYrot_[1][ivNextMin];
+    *t = t2AtMin;
+  }
+}
+
+// calcluate the distance between a pair of segments
+// INPUT:
+// (x1, y1, z1) describes the start/end of first segment
+// (x2, y2, z2) describes the start/end of second segment
+// OUTPUT:
+// (t1, t2) linear distance along segments of closest approach
+// dist the squared distance of closest approach
+void MinimumDistance::SegmentDist(double xStart1, double yStart1,
+                                  double zStart1, double xEnd1, double yEnd1,
+                                  double zEnd1, double xStart2, double yStart2,
+                                  double zStart2, double xEnd2, double yEnd2,
+                                  double zEnd2, double *t1, double *t2,
+                                  double *dist) {
+
+  //std::cout << "Segment distance\n";
+  //std::cout << "  line1 ("
+  //    << xStart1 << ", " << yStart1 << ", " << zStart1 << ")("
+  //    << xEnd1 << ", " << yEnd1 << ", " << zEnd1 << ")\n";
+  //std::cout << "  line2 ("
+  //    << xStart2 << ", " << yStart2 << ", " << zStart2 << ")("
+  //    << xEnd2 << ", " << yEnd2 << ", " << zEnd2 << ")\n";
+  // First, find z1, z2 position of global minimum
+  double a1 = xEnd1 - xStart1;
+  double b1 = yEnd1 - yStart1;
+  double c1 = zEnd1 - zStart1;
+  double a2 = xEnd2 - xStart2;
+  double b2 = yEnd2 - yStart2;
+  double c2 = zEnd2 - zStart2;
+  double sqr1 = a1 * a1 + b1 * b1 + c1 * c1;
+  double sqr2 = a2 * a2 + b2 * b2 + c2 * c2;
+  double crossTerm = -(a1 * a2 + b1 * b2 + c1 * c2);
+  double const1 = a1 * (xStart2 - xStart1) + b1 * (yStart2 - yStart1) +
+                  c1 * (zStart2 - zStart1);
+  double const2 = -(a2 * (xStart2 - xStart1) + b2 * (yStart2 - yStart1) +
+                    c2 * (zStart2 - zStart1));
+  double den = sqr1 * sqr2 - crossTerm * crossTerm;
+  double t1Numer = const1 * sqr2 - const2 * crossTerm;
+  double t2Numer = sqr1 * const2 - const1 * crossTerm;
+
+  if (fabs(den) < 1e-20 ||
+      fabs(den) < 1e-6 * std::max(fabs(t1Numer), fabs(t2Numer))) {
+    //std::cout << "  Found parallel lines\n";
+    // Parallel lines: "just" check the 4 endpoints
+    // start of line1 versus line2
+    double t2Trunc, t1Trunc, tdist;
+    t2Trunc = std::max(
+        0.0, std::min(1.0, tri_point_to_line(xStart2, yStart2, zStart2, a2, b2,
+                                             c2, xStart1, yStart1, zStart1)));
+    *dist =
+        (a2 * t2Trunc + xStart2 - xStart1) *
+            (a2 * t2Trunc + xStart2 - xStart1) +
+        (b2 * t2Trunc + yStart2 - yStart1) *
+            (b2 * t2Trunc + yStart2 - yStart1) +
+        (c2 * t2Trunc + zStart2 - zStart1) * (c2 * t2Trunc + zStart2 - zStart1);
+    *t1 = 0.0;
+    *t2 = t2Trunc;
+    // End of line1 versus line2
+    t2Trunc = std::max(
+        0.0, std::min(1.0, tri_point_to_line(xStart2, yStart2, zStart2, a2, b2,
+                                             c2, xEnd1, yEnd1, zEnd1)));
+    tdist =
+        (a2 * t2Trunc + xStart2 - xEnd1) * (a2 * t2Trunc + xStart2 - xEnd1) +
+        (b2 * t2Trunc + yStart2 - yEnd1) * (b2 * t2Trunc + yStart2 - yEnd1) +
+        (c2 * t2Trunc + zStart2 - zEnd1) * (c2 * t2Trunc + zStart2 - zEnd1);
+    if (tdist < *dist) {
+      *dist = tdist;
+      *t1 = 1.0;
+      *t2 = t2Trunc;
+    }
+    // Start of line2 versus line1
+    t1Trunc = std::max(
+        0.0, std::min(1.0, tri_point_to_line(xStart1, yStart1, zStart1, a1, b1,
+                                             c1, xStart2, yStart2, zStart2)));
+    tdist =
+        (a1 * t1Trunc + xStart1 - xStart2) *
+            (a1 * t1Trunc + xStart1 - xStart2) +
+        (b1 * t1Trunc + yStart1 - yStart2) *
+            (b1 * t1Trunc + yStart1 - yStart2) +
+        (c1 * t1Trunc + zStart1 - zStart2) * (c1 * t1Trunc + zStart1 - zStart2);
+    if (tdist < *dist) {
+      *dist = tdist;
+      *t1 = t1Trunc;
+      *t2 = 0.0;
+    }
+    // End of line2 versus line1
+    t1Trunc = std::max(
+        0.0, std::min(1.0, tri_point_to_line(xStart1, yStart1, zStart1, a1, b1,
+                                             c1, xEnd2, yEnd2, zEnd2)));
+    tdist =
+        (a1 * t1Trunc + xStart1 - xEnd2) * (a1 * t1Trunc + xStart1 - xEnd2) +
+        (b1 * t1Trunc + yStart1 - yEnd2) * (b1 * t1Trunc + yStart1 - yEnd2) +
+        (c1 * t1Trunc + zStart1 - zEnd2) * (c1 * t1Trunc + zStart1 - zEnd2);
+    if (tdist < *dist) {
+      *dist = tdist;
+      *t1 = t1Trunc;
+      *t2 = 1.0;
+    }
+  } else {
+    // Non parallel lines
+    //std::cout << "  Non parallel lines\n";
+    *t1 = t1Numer / den;
+    *t2 = t2Numer / den;
+    bool out1 = (*t1 < 0.0 || *t1 > 1.0);
+    bool out2 = (*t2 < 0.0 || *t2 > 1.0);
+    if (out1 && out2) {
+      // If both closest points are out of bounds, truncate each one to
+      // its segment, then find closest point on other segment to that
+      // truncated point. If this gives different answers, pick the pair
+      // with the closest approach
+      //std::cout << "  Both closest points out of bounds\n";
+      *t1 = std::max(0.0, std::min(1.0, *t1));
+      double t2Trunc = std::max(
+          0.0, std::min(1.0, tri_point_to_line(xStart2, yStart2, zStart2, a2,
+                                               b2, c2, a1 * *t1 + xStart1,
+                                               b1 * *t1 + yStart1,
+                                               c1 * *t1 + zStart1)));
+      *t2 = std::max(0.0, std::min(1.0, *t2));
+      double t1Trunc = std::max(
+          0.0, std::min(1.0, tri_point_to_line(xStart1, yStart1, zStart1, a1,
+                                               b1, c1, a2 * *t2 + xStart2,
+                                               b2 * *t2 + yStart2,
+                                               c2 * *t2 + zStart2)));
+      if (*t1 != t1Trunc || *t2 != t2Trunc) {
+        //std::cout << "  or not equals\n";
+        *dist = (a1 * *t1 + xStart1 - a2 * t2Trunc - xStart2) *
+                    (a1 * *t1 + xStart1 - a2 * t2Trunc - xStart2) +
+                (b1 * *t1 + yStart1 - b2 * t2Trunc - yStart2) *
+                    (b1 * *t1 + yStart1 - b2 * t2Trunc - yStart2) +
+                (c1 * *t1 + zStart1 - c2 * t2Trunc - zStart2) *
+                    (c1 * *t1 + zStart1 - c2 * t2Trunc - zStart2);
+        double tdist = (a1 * t1Trunc + xStart1 - a2 * *t2 - xStart2) *
+                           (a1 * t1Trunc + xStart1 - a2 * *t2 - xStart2) +
+                       (b1 * t1Trunc + yStart1 - b2 * *t2 - yStart2) *
+                           (b1 * t1Trunc + yStart1 - b2 * *t2 - yStart2) +
+                       (c1 * t1Trunc + zStart1 - c2 * *t2 - zStart2) *
+                           (c1 * t1Trunc + zStart1 - c2 * *t2 - zStart2);
+        if (*dist < tdist) {
+          *t2 = t2Trunc;
+        } else {
+          *dist = tdist;
+          *t1 = t1Trunc;
+        }
+      } else {
+        //std::cout << "   simple dist\n";
+        *dist = (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) *
+                    (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) +
+                (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) *
+                    (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) +
+                (c1 * *t1 + zStart1 - c2 * *t2 - zStart2) *
+                    (c1 * *t1 + zStart1 - c2 * *t2 - zStart2);
+      }
+    } else if (out1) {
+      //std::cout << "  Segment point 1 outside bounds\n";
+      *t1 = std::max(0.0, std::min(1.0, *t1));
+      *t2 = std::max(
+          0.0, std::min(1.0, tri_point_to_line(xStart2, yStart2, zStart2, a2,
+                                               b2, c2, a1 * *t1 + xStart1,
+                                               b1 * *t1 + yStart1,
+                                               c1 * *t1 + zStart1)));
+      *dist = (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) *
+                  (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) +
+              (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) *
+                  (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) +
+              (c1 * *t1 + zStart1 - c2 * *t2 - zStart2) *
+                  (c1 * *t1 + zStart1 - c2 * *t2 - zStart2);
+    } else if (out2) {
+      //std::cout << "  Segment point 2 outside bounds\n";
+      *t2 = std::max(0.0, std::min(1.0, *t2));
+      *t1 = std::max(
+          0.0, std::min(1.0, tri_point_to_line(xStart1, yStart1, zStart1, a1,
+                                               b1, c1, a2 * *t2 + xStart2,
+                                               b2 * *t2 + yStart2,
+                                               c2 * *t2 + zStart2)));
+      *dist = (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) *
+                  (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) +
+              (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) *
+                  (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) +
+              (c1 * *t1 + zStart1 - c2 * *t2 - zStart2) *
+                  (c1 * *t1 + zStart1 - c2 * *t2 - zStart2);
+    } else {
+      //std::cout << "  Segment points both inside bounds\n";
+      *dist = (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) *
+                  (a1 * *t1 + xStart1 - a2 * *t2 - xStart2) +
+              (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) *
+                  (b1 * *t1 + yStart1 - b2 * *t2 - yStart2) +
+              (c1 * *t1 + zStart1 - c2 * *t2 - zStart2) *
+                  (c1 * *t1 + zStart1 - c2 * *t2 - zStart2);
+    }
+  }
+}
+
+// determines if xtest, ytest lies within the boundaries defined by bx and by
+bool MinimumDistance::InsideTriangle(double *bx, double *by, double xTest,
+                                     double yTest) {
+  bool inside_triangle = false;
+
+  // std::cout << "Testing (" << xTest << ", " << yTest << ") inside triangle\n";
+  // for (int iv = 0; iv < 3; ++iv) {
+  //   std::cout << "Vertex[" << iv << "] (" << bx[iv] << ", " << by[iv]
+  //             << ")\n";
+  // }
+  // Compute signed area of each triangle between the point and an edge
+  double area0 =
+      (bx[0] - xTest) * (by[1] - yTest) - (bx[1] - xTest) * (by[0] - yTest);
+  double area1 =
+      (bx[1] - xTest) * (by[2] - yTest) - (bx[2] - xTest) * (by[1] - yTest);
+  double area2 =
+      (bx[2] - xTest) * (by[0] - yTest) - (bx[0] - xTest) * (by[2] - yTest);
+
+  if (area0 != 0.0 && area1 != 0.0 && area2 != 0.0) {
+    //std::cout << "Testing first case of all nonzero areas\n";
+    inside_triangle = ((area0 > 0.0 && area1 > 0.0 && area2 > 0.0) ||
+                       (area0 < 0.0 && area1 < 0.0 && area2 < 0.0));
+    return inside_triangle;
+  }
+  if (area0 == 0.0 && area1 == 0.0 && area2 == 0.0) {
+    std::cout << "ALL AREAS 0 NOT IMPLEMENTED YET!\n";
+    exit(1);
+  }
+  //std::cout << "Testing third case of wacky triangles\n";
+  inside_triangle = area0 == 0. and area1 > 0. and area2 > 0. or
+                    area0 == 0. and area1 < 0. and area2 < 0. or
+                    area1 == 0. and area0 > 0. and area2 > 0. or
+                    area1 == 0. and area0 < 0. and area2 < 0. or
+                    area2 == 0. and area0 > 0. and area1 > 0. or
+                    area2 == 0. and area0 < 0. and area1 < 0. or
+                    area0 == 0. and area1 == 0. or
+                    area0 == 0. and area2 == 0. or area0 == 1. and area2 == 0.;
+
+  return inside_triangle;
 }
 
 #undef SMALL

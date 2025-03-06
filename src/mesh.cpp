@@ -159,6 +159,7 @@ void Mesh::RelocateMesh(double const *const new_pos, double const *const u) {
   }
   for (int i = 0; i < n_sites_; ++i) {
     sites_[i].SetPosition(position_);
+    // SAF TODO: check that this duplicate index isnt causing any fuckery
     for (int i = 0; i < n_dim_; ++i) {
       // FIXME ? This would leave the position of mesh at the last site location
       // which seems wrong.

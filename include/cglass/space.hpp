@@ -6,11 +6,13 @@
 #include <math.h>
 
 class Space {
+public:
+  boundary_type boundary_;
+
 private:
   // geometric data
   int n_dim_ = -1;
   int n_periodic_ = -1;
-  boundary_type boundary_;
   std::string boundary_type_string_;
   double radius_ = 0;
   double volume_ = 0;

@@ -12,17 +12,18 @@ class CrosslinkOutputManager : public OutputManagerBase<CrosslinkSpecies> {
 };
 
 class CrosslinkManager {
- private:
+private:
   system_parameters *params_;
   CrosslinkOutputManager output_mgr_;
   double obj_volume_;
-  double rcutoff_ = 0;  // Cutoff for binding any crosslink and bond
+  double rcutoff_ = 0; // Cutoff for binding any crosslink and bond
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
+  std::map<std::string, CrosslinkSpecies *> species_map_;
   std::vector<Object *> *objs_;
   space_struct *space_;
 
- public:
+public:
   void Init(system_parameters *params, space_struct *space,
             std::vector<Object *> *objs);
   void GetInteractors(std::vector<Object *> &ixors);
@@ -47,6 +48,13 @@ class CrosslinkManager {
   const double GetRCutoff() const {
     Logger::Trace("Crosslink rcutoff is %2.2f", rcutoff_);
     return rcutoff_;
+  }
+  CrosslinkSpecies *GetSPBCrosslinkSpecies(std::string name) {
+    auto map_entry{species_map_.find(name)};
+    if (map_entry == species_map_.end()) {
+      return nullptr;
+    }
+    return map_entry->second;
   }
 };
 

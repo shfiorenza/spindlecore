@@ -90,6 +90,9 @@ void Simulation::RunSimulation() {
     WriteOutputs();
     /* Integrate EOM on all objects to update positions, etc */
     Integrate();
+    if (params_.mesh_membrane) {
+      membrane_.UpdatePositions();
+    }
     /* Update system pressure, volume, etc if necessary */
     Statistics();
     /* Draw the particles in graphics window, if using graphics */
@@ -211,6 +214,10 @@ void Simulation::InitSimulation() {
   }
 #endif
   space_.Init(&params_);
+  if (params_.mesh_membrane) {
+    printf("initializating triangular mesh membrane\n");
+    membrane_.Init(&params_);
+  }
   InitObjects();
   ix_mgr_.Init(&params_, &species_, space_.GetStruct());
   InitSpecies();
@@ -219,9 +226,38 @@ void Simulation::InitSimulation() {
   InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
+#ifndef NOGRAPH
+    if (params_.mesh_membrane) {
+      graphics_.membrane_ = &membrane_;
+    }
+    // SF FIXME make this less bad
+    for (auto spec = species_.begin(); spec != species_.end(); spec++) {
+      if ((*spec)->GetSID() == +species_id::centrosome) {
+        for (int i_centro{0}; i_centro < (*spec)->GetNMembers(); i_centro++) {
+          graphics_.spbs_.push_back(
+              dynamic_cast<Centrosome *>((*spec)->GetMember(i_centro)));
+          printf("Adding centrosome #%i to graphics\n", i_centro);
+        }
+      }
+    }
+#endif
   }
   params_.i_step = 0;
   WriteOutputs();
+  // SF TODO cleanup and make neighbor list dynamic
+  if (params_.mesh_membrane) {
+    printf("Addng neighbors to mesh mebrane\n");
+    for (auto spec = species_.begin(); spec != species_.end(); spec++) {
+      if ((*spec)->GetSID() == +species_id::filament or
+          (*spec)->GetSID() == +species_id::rigid_filament) {
+        for (int i_fil{0}; i_fil < (*spec)->GetNMembers(); i_fil++) {
+          membrane_.boundary_neighbs_.push_back((*spec)->GetMember(i_fil));
+          printf("Adding filament #%i to membrane neighbs\n",
+                 membrane_.boundary_neighbs_.back()->GetOID());
+        }
+      }
+    }
+  }
 }
 
 /* Initialize static object parameters that are used everywhere */
@@ -314,7 +350,48 @@ void Simulation::InitSpecies() {
 /* Initialize object positions and orientations.*/
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   Logger::Info("Inserting species");
+  // SF: this is probably bad lol
+  CentrosomeSpecies *centrosomes{nullptr};
+  std::string filament_species_name;
+  // SF: first, scan thru species to find SPB-associated filament species
+  for (auto spec{species_.begin()}; spec != species_.end(); ++spec) {
+    if ((*spec)->GetSID() == +species_id::centrosome) {
+      if (centrosomes != nullptr) {
+        printf("Error: support multiple centrosome species at this time.'\n");
+        exit(1);
+      }
+      centrosomes = dynamic_cast<CentrosomeSpecies *>((*spec));
+      printf("FOUND centrosomes -- '%s'\n", (*spec)->GetSpeciesName().c_str());
+      filament_species_name = centrosomes->GetFilamentSpeciesName();
+    }
+  }
+  // SF: next, pick out SPB filament species and store ptr
+  // SF: must be a better way -- auto lambda function? templates?
+  FilamentSpecies *filaments{nullptr};
+  RigidFilamentSpecies *rigid_filaments{nullptr};
   for (auto spec = species_.begin(); spec != species_.end(); ++spec) {
+    if ((*spec)->GetSpeciesName().compare(filament_species_name) == 0) {
+      if ((*spec)->GetSID() == +species_id::filament) {
+        if ((*spec)->GetNInsert() > 0) {
+          if (filaments != nullptr or rigid_filaments != nullptr) {
+            printf("Error: only one filament species can be named 'Spindle'\n");
+            exit(1);
+          }
+          filaments = dynamic_cast<FilamentSpecies *>((*spec));
+          printf("FOUND filaments - '%s'\n", (*spec)->GetSpeciesName().c_str());
+        }
+      } else if ((*spec)->GetSID() == +species_id::rigid_filament) {
+        if ((*spec)->GetNInsert() > 0) {
+          if (filaments != nullptr or rigid_filaments != nullptr) {
+            printf("Error: only one filament species can be named 'Spindle'\n");
+            exit(1);
+          }
+          rigid_filaments = dynamic_cast<RigidFilamentSpecies *>((*spec));
+          printf("FOUND <<RIGID>> filaments - '%s'\n",
+                 (*spec)->GetSpeciesName().c_str());
+        }
+      }
+    }
     // Check for random insertion
     if (processing ||
         (*spec)->GetInsertionType().find("random") == std::string::npos) {
@@ -432,6 +509,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
                       params_.species_insertion_reattempt_threshold);
       }
     }
+    // SF: I don't think this does anything. InitMembers() deprecated?
+    // SF (later): Apparently, but ArrangeMembers() is still in use!
     if (!processing) {
       (*spec)->InitMembers();
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
@@ -439,6 +518,18 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
     }
   }
+  // SF: next, get SPB crosslink species from interaction manager
+  if (centrosomes != nullptr) {
+    if (filaments != nullptr) {
+      printf("Anchoring filaments to SPBs\n");
+      centrosomes->AnchorFilaments(filaments, true);
+    }
+    if (rigid_filaments != nullptr) {
+      printf("Anchoring <<RIGID>> filaments to SPBs\n");
+      centrosomes->AnchorFilaments(rigid_filaments, false);
+    }
+  }
+
   /* Initialize static crosslink positions */
   ix_mgr_.InsertCrosslinks();
   /* Should do this all the time to force object counting */
@@ -455,6 +546,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   // if (!processing) {
   ix_mgr_.CheckUpdateObjects(); // Forces update as well
   //}
+  // Add SPBs to interaction manager if they exist w/ associated filaments
+  if (centrosomes != nullptr and filaments != nullptr) {
+    ix_mgr_.SetSPBs(centrosomes);
+  }
 }
 
 /* Tear down data structures, e.g. cell lists, and close graphics window if
@@ -507,6 +602,9 @@ void Simulation::GetGraphicsStructure() {
   graph_array_.clear();
   for (auto it = species_.begin(); it != species_.end(); ++it) {
     (*it)->Draw(graph_array_);
+  }
+  if (params_.mesh_membrane) {
+    membrane_.Draw(graph_array_);
   }
   /* Visualize interaction forces, crosslinks, etc */
   ix_mgr_.DrawInteractions(graph_array_);
