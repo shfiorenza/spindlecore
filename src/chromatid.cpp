@@ -19,6 +19,7 @@ void Chromatid::Init(chromosome_parameters *sparams) {
   diffusion_par_ = noise_tr * sqrt(24.0 * diameter_ / delta_);
   diffusion_perp_ = noise_tr * sqrt(48.0 * diameter_ / delta_);
   diffusion_rot_ = noise_rot * sqrt(8.0 * CUBE(diameter_) / delta_);
+  kc.Init();
   //   double pos[3] = {0, 0, 0};
   //   double u[3] = {0, 0, 0};
   //   Logger::Trace("Inserting CHROMATID object %d randomly", GetOID());

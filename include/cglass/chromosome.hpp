@@ -23,7 +23,7 @@ class Chromosome : public Object {
 private:
   bool af_tip_crowd_{false};
   double af_xc_assemble_{0.0};
-  double af_r0_{0.0};
+  double af_r0_{1.0};
   double af_tip_on_rate_assemble_{0.0};
   double rcutoff_{0.0};
 

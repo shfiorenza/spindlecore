@@ -2,6 +2,7 @@
 #define _CGLASS_KINETOCHORE_H_
 
 #include "object.hpp"
+#include "triangle_mesh.hpp"
 
 class Kinetochore : public Object {
 

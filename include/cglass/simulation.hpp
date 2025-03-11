@@ -5,7 +5,7 @@
 #include "interaction_manager.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "triangle_mesh.hpp"
+#include "triangle_mesh_boundary.hpp"
 
 class Simulation {
 private:
@@ -30,7 +30,7 @@ private:
   Graphics graphics_;
 #endif
   Space space_;
-  TriMesh membrane_;
+  TriMeshBoundary membrane_;
   std::vector<SpeciesBase *> species_;
   void InitSimulation();
   void InitObjects();

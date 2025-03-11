@@ -2,13 +2,13 @@ seed: 114222003020845
 run_name: test
 n_dim: 3
 n_periodic: 0
-boundary: 2
+boundary: 5 #2
 draw_boundary: true
-system_radius: 40
+system_radius: 30
 delta: 1e-4 #1e-5
-dynamic_timestep: true #false
-dynamic_timestep_ramp: 0.0001
-n_steps: 500 # 000
+dynamic_timestep: false
+dynamic_timestep_ramp: 1e-4
+n_steps: 50000 # 000
 n_steps_equil: 0
 graph_flag: true
 auto_graph: true
@@ -21,7 +21,7 @@ wca_sig: 1
 wca_eps: 1
 f_cutoff: 10000
 zero_temperature: false
-checkpoint_flag: false
+checkpoint_flag: true
 n_checkpoint: 100
 mesh_coarsening: 2 # SF this is not related to the below bool/params lol sry
 remove_duplicate_interactions: false   # SF TODO explore this
@@ -74,14 +74,14 @@ rigid_filament:
     num: 0
     length: 1
 filament:
-  - name: bulk #SPINDLE
-    insertion_type: random # spb_anchored
+  - name: SPINDLE
+    insertion_type: random #spb_anchored
     draw_type: orientation
     color: 2
-    num: 12 # 12 #5 # 10
-    length: 70 # 5
+    num: 0 #5 # 10
+    length: 40 # 5
     min_length: 2
-    max_length: 120 # 110  # SF TODO no upper cap in NAB -- possible in C-GLASS?
+    max_length: 50 #120 # 110  # SF TODO no upper cap in NAB -- possible in C-GLASS?
     min_bond_length: 1
     polydispersity_flag: false
     persistence_length: 800 # 2 mm
@@ -102,8 +102,8 @@ filament:
     # partner_destab_k: 1.3488364     # SF TODO explore
     posit_flag: true
     spec_flag: true
-    n_spec: 10
-    n_posit: 10
+    n_spec: 100
+    n_posit: 100
 crosslink:
   - name: kinesin-5 # plus-end motor (two walking heads)
     insertion_type: random
@@ -112,7 +112,7 @@ crosslink:
     tether_diameter: 0.3
     tether_color: 4.67
     diameter: 1.2  # SF check if this has physical implications or just GFX
-    concentration: 3 # 3.3  # SF TODO calculate
+    concentration: 0.0 #3 # 3.3  # SF TODO calculate
     infinite_reservoir_flag: false
     use_binding_volume: false
     k_spring: 45.29
@@ -147,7 +147,7 @@ crosslink:
     tether_diameter: 0.3
     tether_color: 3.33
     diameter: 1.2  # SF check if this has physical implications or just GFX
-    concentration: 0.3 # 0.045 # 4.5  # SF TODO calculate
+    concentration: 0.0 #0.3 # 0.045 # 4.5  # SF TODO calculate
     infinite_reservoir_flag: false
     use_binding_volume: false
     k_spring: 45.29
@@ -190,7 +190,7 @@ crosslink:
     tether_diameter: 0.3
     tether_color: 1.33
     diameter: 1.2  # SF check if this has physical implications or just GFX
-    concentration: 0.3 # 0.033 # 3.3  # SF TODO calculate
+    concentration: 0.0 #0.3 # 0.033 # 3.3  # SF TODO calculate
     infinite_reservoir_flag: false
     use_binding_volume: false
     k_spring: 31.55

@@ -5,7 +5,7 @@
 
 #include "auxiliary.hpp"
 #include "cglass/centrosome.hpp"
-#include "cglass/triangle_mesh.hpp"
+#include "cglass/triangle_mesh_boundary.hpp"
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
@@ -90,7 +90,7 @@ public:
   GLfloat sphere_color_[3], box_color_[3], background_color_[3];
   GLfloat alpha_; // transparency (1 opaque, 0 invisible)
 
-  TriMesh *membrane_;
+  TriMeshBoundary *membrane_;
   std::vector<Centrosome *> spbs_;
   GLUquadricObj *qobj_;
 

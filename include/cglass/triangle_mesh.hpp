@@ -176,74 +176,35 @@ struct Triangle {
 
 class TriMesh {
 
-private:
+protected:
   static const size_t n_edges_min_{3};  // true for any connected graph
   static const size_t n_edges_max_{10}; // arbitrary choice
-
   bool do_not_pass_go_{false};
-  int i_datapoint_{0};
 
-  FILE *forces_{nullptr};    // average force from each type of potential
-  FILE *vertices_{nullptr};  // position (3D per vrt per step)
-  FILE *adjacency_{nullptr}; // adjacency matrix  (2D per vrt per step)
+  MinimumDistance mindist_;
   system_parameters *params_{nullptr};
 
-  double f_avgs_[4]; // indices 0-4: tether, bend, area, vol
-
-  double l_avg_{0.0};
-  double gamma_{0.0};
-
-  // params for radial force
-  double kappa_B_{0.0};
-  double l_max_{0.0};
-  double l_min_{0.0};
-  double l_c0_{0.0};
-  double l_c1_{0.0};
-  // params for bending force
-  double kappa_{0.0};
-  // params for area conservation force
-  double kappa_l_{0.0};
-  double A_prime_{0.0};
-  // params for volume conservation force
-  double kappa_v_{0.0};
-  double V_prime_{0.0};
-  RNG *rng_; // SF TODO link with system RNG
-  MinimumDistance mindist_;
-
 public:
-  double r_sys_{0.0};
   double centroid_[3];
-
-  std::vector<Object *> boundary_neighbs_;
+  graph_struct o_; // centroid
 
   std::vector<Vertex> vrts_;
   std::vector<Triangle> tris_;
   std::vector<Edge> edges_;
 
-  std::vector<graph_struct> f_mem_;
-  graph_struct o_;
-
-private:
-  void SetParameters();
-  void MakeIcosphere();
-  void MakeIcosahedron();
+protected:
   void DivideFaces();
-  void ProjectToUnitSphere();
-  void InitializeMesh();
-  void FlipEdges();
+  virtual void InitializeMesh();
+
   void UpdateCentroid();
   void UpdateTriangles();
   void UpdateNeighbors();
   void UpdateMesh();
-  void ApplyMembraneForces();
-  void ApplyBoundaryForces();
 
 public:
   TriMesh() {}
-  void Init(system_parameters *params);
-  void Draw(std::vector<graph_struct *> &graph_array);
-  void UpdatePositions();
-  void WriteOutputs();
+  void Init();
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
 };
 
 #endif
