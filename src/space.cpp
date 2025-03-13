@@ -229,6 +229,7 @@ void Space::CalculateRadius() {
     else if (n_dim_ == 2)
       radius_ = 0.5 * sqrt(volume_);
     break;
+  case 5:
   case 2:
     if (n_dim_ == 3)
       radius_ = pow(3.0 * volume_ / (4.0 * M_PI), 1.0 / 3.0);
