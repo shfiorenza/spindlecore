@@ -1,3 +1,6 @@
+#ifndef _CGLASS_NEIGHBOR_LIST_H_
+#define _CGLASS_NEIGHBOR_LIST_H_
+
 #include "auxiliary.hpp"
 #include "object.hpp"
 #include <mutex>
@@ -31,3 +34,5 @@ public:
     return nlist_[i_neighbor];
   }
 };
+
+#endif
