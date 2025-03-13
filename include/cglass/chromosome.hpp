@@ -20,6 +20,8 @@ inline double safe_acos(double x) {
 // By convention, the Object that 'Chromosome' represents
 // is the centromere since it is a logical mid-way point
 class Chromosome : public Object {
+  friend class Chromatid;
+
 private:
   bool af_tip_crowd_{false};
   double af_xc_assemble_{0.0};
@@ -70,13 +72,14 @@ public:
     Object::Draw(graph_array);
     for (auto &&sis : sisters_) {
       sis.Draw(graph_array);
+      sis.kc.Draw(graph_array);
       // for (int i_dim{0}; i_dim < 3; i_dim++) {
       //   printf("U[%i] = %g\n", i_dim, sis.orientation_[i_dim]);
       // }
     }
   }
   void GetInteractors(std::vector<Object *> &ixors) {
-    ixors.push_back(this);
+    // ixors.push_back(this);
     for (auto &&sis : sisters_) {
       ixors.push_back(&sis);
     }

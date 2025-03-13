@@ -6,15 +6,21 @@
 class Chromosome;
 
 class Chromatid : public BrRod {
+  friend Chromosome;
+  friend Kinetochore;
 
 private:
+  bool second_sister_;
+
+  Chromosome *parent_;
   Kinetochore kc;
 
   chromosome_parameters *sparams_;
 
-  friend Chromosome;
-
 protected:
+  double r_[3];
+  double u_[3];
+  double u_eff_[3];
   double v_[3];
   double w_[3];
 
@@ -23,7 +29,7 @@ public:
     printf("  NEW chromatid\n");
     SetSID(species_id::chromosome);
   }
-  void Init(chromosome_parameters *sparams);
+  void Init(Chromosome *chromo, double *u, double *v, double *w);
 
   void GetBodyFrame() {
     BrRod::GetBodyFrame();
@@ -32,6 +38,8 @@ public:
       w_[i_dim] = body_frame_[3 + i_dim];
     }
   }
+
+  void UpdatePosition();
 };
 
 #endif

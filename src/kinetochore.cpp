@@ -1,7 +1,20 @@
 #include "cglass/kinetochore.hpp"
+#include "cglass/chromatid.hpp"
 #include <iostream>
 
-void Kinetochore::Init() {}
+void Kinetochore::Init(Chromatid *parent) {
+  parent_ = parent;
+  double pos[3];
+  int sign{parent_->second_sister_ ? -1 : 1};
+  for (int i_dim{0}; i_dim < params_->n_dim; i_dim++) {
+    pos[i_dim] = parent_->GetPosition()[i_dim] +
+                 0.5 * sign * parent_->v_[i_dim] * parent_->diameter_;
+  }
+  InsertAt(pos, parent_->u_);
+  color_ = 0.2;
+  length_ = 0.0;
+  diameter_ = 1.0;
+}
 
 void Kinetochore::Update_1_2() {
 

@@ -55,6 +55,11 @@ void ChromosomeSpecies::CheckSAC() {
 }
 
 void ChromosomeSpecies::UpdatePositions() {
+  // Do binding/unbinding
+  // SF TODO include nkmc_ for chromo-specific timestep
+  for (auto &&chromo : members_) {
+    chromo.RunKMC();
+  }
   // Run brownian dynamics and update statistics
   n_bioriented_ = 0;
   for (auto &&chromo : members_) {
@@ -66,11 +71,6 @@ void ChromosomeSpecies::UpdatePositions() {
     }
   }
   CheckSAC();
-  // Do binding/unbinding
-  // SF TODO include nkmc_ for chromo-specific timestep
-  for (auto &&chromo : members_) {
-    chromo.RunKMC();
-  }
 }
 
 void ChromosomeSpecies::GetInteractors(std::vector<Object *> &ixors) {

@@ -43,11 +43,13 @@ void Chromosome::Init(chromosome_parameters *sparams) {
     pos_sis_one[i_dim] = pos[i_dim] + v[i_dim] * diameter_ / 2.0;
     pos_sis_two[i_dim] = pos[i_dim] - v[i_dim] * diameter_ / 2.0;
   }
-  for (auto &&sis : sisters_) {
-    sis.Init(sparams);
-  }
   sisters_[0].InsertAt(pos_sis_one, u);
+  sisters_[0].second_sister_ = false;
   sisters_[1].InsertAt(pos_sis_two, u);
+  sisters_[1].second_sister_ = true;
+  for (auto &&sis : sisters_) {
+    sis.Init(this, u, v, w);
+  }
 }
 
 void Chromosome::Update_1_2_Probability() {
@@ -236,7 +238,6 @@ void Chromosome::KMC_2_1_FDep() {
 }
 
 void Chromosome::RunKMC() {
-
   // Randomly decide to do detach->attach or reverse
   int g[2] = {0, 1};
   for (int i = 0; i < 2; ++i) {
@@ -284,7 +285,7 @@ void Chromosome::UpdatePosition() {
   int n_dim{params_->n_dim};
   double k, r0, kth, kv;
   //SF TODO put these in parameter structure/yaml file
-  k = 6.0;
+  k = 60; //6.0;
   r0 = 4.0;
   kth = 450.0;
   kv = 450.0;
@@ -295,7 +296,9 @@ void Chromosome::UpdatePosition() {
     r[i] = sisters_[0].position_[i] - sisters_[1].position_[i];
     rmag2 += SQR(r[i]);
   }
+  // printf("r: [%g, %g, %g]\n", r[0], r[1], r[0]);
   double rmag = sqrt(rmag2);
+  // printf("rmag: %g\n", rmag);
   for (int i = 0; i < n_dim; ++i) {
     rhat[i] = r[i] / rmag;
   }
@@ -350,7 +353,7 @@ void Chromosome::UpdatePosition() {
   // update the forces
   double force[3] = {0.0, 0.0, 0.0};
   for (int i = 0; i < n_dim; ++i) {
-    force_[i] =
+    force[i] =
         (linearfactor * rhat[i] + thetaAfactor * rhatcrossrhatcrossuA[i] +
          thetaBfactor * rhatcrossrhatcrossuB[i]);
     // f_chromosome[2 * ic + 1][i] -=
@@ -363,6 +366,7 @@ void Chromosome::UpdatePosition() {
     //     (linearfactor * rhat[i] + thetaAfactor * rhatcrossrhatcrossuA[i] +
     //      thetaBfactor * rhatcrossrhatcrossuB[i]);
   }
+  // printf("force: [%g, %g, %g]\n", force[0], force[1], force[2]);
   sisters_[0].AddForce(force);
   sisters_[1].SubForce(force);
 
@@ -396,6 +400,7 @@ void Chromosome::UpdatePosition() {
   // Next: integrate to update their position (and add thermal noise)
   for (auto &&sis : sisters_) {
     sis.Integrate();
+    sis.UpdatePosition();
   }
   // Final: update position of centromere to be exactly in between two sisters
   double r_com[3];
