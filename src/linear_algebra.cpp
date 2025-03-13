@@ -100,12 +100,22 @@ Outputs:
 void periodic_boundary_conditions(int n_dim, int n_periodic, double *h,
                                   double *h_inv, double *r, double *s) {
   /* Compute scaled coordinate and apply periodic boundary conditions. */
+
   for (int i = 0; i < n_periodic; ++i) {
     s[i] = 0.0;
     for (int j = 0; j < n_periodic; ++j) {
       s[i] += h_inv[n_dim * i + j] * r[j];
     }
     s[i] -= NINT(s[i]);
+  }
+
+  // below added by Shane -- not sure if correct?
+  // (to fix incorrect cell list functionaliy with non-periodic dims)
+  for (int i = n_periodic; i < n_dim; ++i) {
+    s[i] = 0.0;
+    for (int j = n_periodic; j < n_dim; ++j) {
+      s[i] += h_inv[n_dim * i + j] * r[j];
+    }
   }
 
   /* Recompute real coordinates accounting for periodic boundary conditions. */
@@ -192,7 +202,8 @@ void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b,
   }
   (*d)[n] = ((*d)[n] - (*a)[n - 1] * (*d)[n - 1]) /
             ((*b)[n] - (*a)[n - 1] * (*c)[n - 1]);
-  for (int i = n; i-- > 0;) (*d)[i] -= (*c)[i] * (*d)[i + 1];
+  for (int i = n; i-- > 0;)
+    (*d)[i] -= (*c)[i] * (*d)[i + 1];
   return;
 }
 
@@ -233,11 +244,13 @@ void rotate_vector_relative(int n_dim, double *vect1, double *vect2) {
   double vx, vy, vz, theta, phi;
   vx = vect1[0];
   vy = vect1[1];
-  if (n_dim == 3) vz = vect1[2];
+  if (n_dim == 3)
+    vz = vect1[2];
 
   // get theta, phi for vect2
   phi = atan2(vect2[1], vect2[0]);
-  if (n_dim == 3) theta = acos(vect2[2]);
+  if (n_dim == 3)
+    theta = acos(vect2[2]);
 
   // rodrigues formula
   if (n_dim == 3) {
