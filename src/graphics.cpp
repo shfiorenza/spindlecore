@@ -834,13 +834,15 @@ void Graphics::DrawSpheros() {
     glPopMatrix();
   }
   glDisableVertexAttribArray(spherocylinder_.attributes_.position);
+  glDisable(GL_CULL_FACE);
+  glUseProgram(0);
 }
 
 void Graphics::Draw3d() {
   KeyInteraction();
   UpdateWindow();
-  DrawSPBs();
   DrawSpheros();
+  DrawSPBs();
   DrawBoundary();
   // DrawText();
   glfwSwapBuffers(window_);
